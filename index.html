@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Workspace</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                System Secure
+            </div>
+            <h1>Personal Dashboard</h1>
+            <p class="subtitle">Authorized Personnel Only</p>
+        </header>
+
+        <main class="grid">
+            <!-- Project Card -->
+            <section class="card glass">
+                <div class="card-header">
+                    <h2>Current Project</h2>
+                    <span class="icon">🚀</span>
+                </div>
+                <div class="card-content">
+                    <h3>Secret Website</h3>
+                    <p>Status: <span class="highlight">In Development</span></p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 40%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Links -->
+            <section class="card glass">
+                <div class="card-header">
+                    <h2>Quick Access</h2>
+                    <span class="icon">🔗</span>
+                </div>
+                <div class="card-content links-list">
+                    <a href="https://github.com" target="_blank" class="link-item">GitHub</a>
+                    <a href="https://dash.cloudflare.com" target="_blank" class="link-item">Cloudflare Dashboard</a>
+                    <a href="#" class="link-item">Localhost</a>
+                </div>
+            </section>
+
+            <!-- System Info -->
+            <section class="card glass">
+                <div class="card-header">
+                    <h2>System Status</h2>
+                    <span class="icon">⚡</span>
+                </div>
+                <div class="card-content">
+                    <div class="stat-row">
+                        <span>Access Level</span>
+                        <span class="stat-value">Admin</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Last Login</span>
+                        <span class="stat-value" id="last-login">Just now</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Simple script to update last login time for demo purposes
+        const now = new Date();
+        document.getElementById('last-login').textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    </script>
+</body>
+
+</html>
