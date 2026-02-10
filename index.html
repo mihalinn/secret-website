@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Workspace</title>
+    <title>Attendance Tool</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,106 +17,255 @@
 </head>
 
 <body>
-    <!-- Password Overlay -->
-    <div id="auth-overlay" class="auth-overlay">
-        <div class="auth-box card glass">
-            <h2>Security Check</h2>
-            <p>Enter access code to proceed.</p>
-            <input type="password" id="pass-input" placeholder="Access Code">
-            <button onclick="checkPass()">Unlock</button>
-            <p id="error-msg" style="color: #ff6b6b; display: none; margin-top: 5px;">Invalid Code</p>
-        </div>
-    </div>
-
     <div class="background-animation"></div>
 
-    <div class="container" id="main-content" style="filter: blur(10px); pointer-events: none;">
+    <div class="container" id="main-content">
         <header class="header">
             <div class="status-badge">
                 <span class="status-dot"></span>
-                System Secure
+                Attendance Tool
             </div>
-            <h1>Personal Dashboard</h1>
-            <p class="subtitle">Authorized Personnel Only</p>
+            <h1>Daily Report</h1>
         </header>
 
-        <main class="grid">
-            <!-- Project Card -->
-            <section class="card glass">
-                <div class="card-header">
-                    <h2>Current Project</h2>
-                    <span class="icon">🚀</span>
-                </div>
-                <div class="card-content">
-                    <h3>Secret Website</h3>
-                    <p>Status: <span class="highlight">In Development</span></p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 40%"></div>
+        <main class="grid single-column wide-layout">
+            <section class="card glass form-card">
+                <div class="horizontal-container">
+                    <!-- Unit 1: Start -->
+                    <div class="control-group">
+                        <div class="ctrl-row">
+                            <select id="start-type" class="sm-select" onchange="updateConnectors()">
+                                <option value="(出社)">(出社)</option>
+                                <option value="(早出)">(早出)</option>
+                                <option value="(直行)">(直行)</option>
+                            </select>
+                        </div>
+                        <div class="time-ctrl">
+                            <button onclick="adjTime('start-time', -15)">-</button>
+                            <input type="time" id="start-time" value="09:00" step="300" onchange="calcOvertime()">
+                            <button onclick="adjTime('start-time', 15)">+</button>
+                        </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- Quick Links -->
-            <section class="card glass">
-                <div class="card-header">
-                    <h2>Quick Access</h2>
-                    <span class="icon">🔗</span>
-                </div>
-                <div class="card-content links-list">
-                    <a href="https://github.com" target="_blank" class="link-item">GitHub</a>
-                    <a href="https://dash.cloudflare.com" target="_blank" class="link-item">Cloudflare Dashboard</a>
-                    <a href="#" class="link-item">Localhost</a>
-                </div>
-            </section>
+                    <!-- Unit 2: Conn 1 -->
+                    <div class="control-group">
+                        <select id="conn-1" class="xs-select">
+                            <option value="～">～</option>
+                            <option value="(休5)">(休5)</option>
+                            <option value="(継続)">(継続)</option>
+                            <option value="">(なし)</option>
+                        </select>
+                    </div>
 
-            <!-- System Info -->
-            <section class="card glass">
-                <div class="card-header">
-                    <h2>System Status</h2>
-                    <span class="icon">⚡</span>
+                    <!-- Unit 3: Middle (Type & Count) -->
+                    <div class="control-group">
+                        <div class="ctrl-row">
+                            <select id="middle-type" class="md-select">
+                                <option value="外勤">外勤</option>
+                                <option value="外勤同行">外勤同行</option>
+                                <option value="内勤">内勤</option>
+                            </select>
+                            <select id="visit-count" class="xs-select">
+                                <option value="1件">1件</option>
+                                <option value="2件">2件</option>
+                                <option value="3件">3件</option>
+                                <option value="4件">4件</option>
+                                <option value="5件">5件</option>
+                                <option value="">-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Unit 4: Return -->
+                    <div class="control-group">
+                        <div class="ctrl-row">
+                            <select id="return-type" class="sm-select">
+                                <option value="(帰社)">(帰社)</option>
+                                <option value="(直帰)">(直帰)</option>
+                                <option value="">(なし)</option>
+                            </select>
+                        </div>
+                        <div class="time-ctrl">
+                            <button onclick="adjTime('return-time', -15)">-</button>
+                            <input type="time" id="return-time" value="16:00" step="300">
+                            <button onclick="adjTime('return-time', 15)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Unit 5: Conn 2 -->
+                    <div class="control-group">
+                        <select id="conn-2" class="xs-select">
+                            <option value="(継続)">(継続)</option>
+                            <option value="～">～</option>
+                            <option value="(休15)">(休15)</option>
+                            <option value="">(なし)</option>
+                        </select>
+                    </div>
+
+                    <!-- Unit 6: End -->
+                    <div class="control-group">
+                        <div class="ctrl-row">
+                            <select id="end-content" class="md-select">
+                                <option value="付帯業務">付帯業務</option>
+                                <option value="事務処理">事務処理</option>
+                                <option value="会議">会議</option>
+                                <option value="">(なし)</option>
+                            </select>
+                            <select id="end-type" class="sm-select">
+                                <option value="(退社)">(退社)</option>
+                                <option value="(直帰)">(直帰)</option>
+                            </select>
+                        </div>
+                        <div class="time-ctrl">
+                            <button onclick="adjTime('end-time', -15)">-</button>
+                            <input type="time" id="end-time" value="17:45" step="300" onchange="calcOvertime()">
+                            <button onclick="adjTime('end-time', 15)">+</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="stat-row">
-                        <span>Access Level</span>
-                        <span class="stat-value">Admin</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>Last Login</span>
-                        <span class="stat-value" id="last-login">Just now</span>
-                    </div>
+
+                <!-- Result Area -->
+                <div class="preview-area horizontal-preview">
+                    <div class="result-box" id="result-text">...</div>
+                    <button class="btn-icon" onclick="copyResult()" title="Copy">📋 Copy</button>
+                    <div class="overtime-badge" id="overtime-val">0h 00m</div>
                 </div>
             </section>
         </main>
     </div>
 
     <script>
-        // Simple script to update last login time for demo purposes
-        const now = new Date();
-        document.getElementById('last-login').textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-
-        // Password Protection Logic
-        function checkPass() {
-            const input = document.getElementById('pass-input').value;
-            // Simple hardcoded password for demonstration.
-            if(input === '3820') {
-                document.getElementById('auth-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('auth-overlay').style.display = 'none';
-                    document.getElementById('main-content').style.filter = 'none';
-                    document.getElementById('main-content').style.pointerEvents = 'auto';
-                }, 500);
-            } else {
-                document.getElementById('error-msg').style.display = 'block';
-                document.getElementById('pass-input').value = '';
-            }
+        function formatTime(timeVal) {
+            if (!timeVal) return "";
+            return timeVal.replace(":", "");
         }
 
-        // Allow Enter key to submit
-        document.getElementById('pass-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkPass();
+        function getMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // Time Adjuster
+        function adjTime(id, mins) {
+            const el = document.getElementById(id);
+            if (!el.value) {
+                if (id === 'return-time') el.value = '16:00';
+                else if (id === 'start-time') el.value = '09:00';
+                else el.value = '17:45';
             }
+
+            let cur = getMinutes(el.value);
+            cur += mins;
+
+            if (cur < 0) cur += 24 * 60;
+            if (cur >= 24 * 60) cur -= 24 * 60;
+
+            const h = Math.floor(cur / 60);
+            const m = cur % 60;
+            el.value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+            el.dispatchEvent(new Event('input'));
+            el.dispatchEvent(new Event('change'));
+        }
+
+        function updateConnectors() {
+            const startType = document.getElementById('start-type').value;
+            const conn1 = document.getElementById('conn-1');
+
+            if (startType === '(早出)') {
+                conn1.value = '(休5)';
+            } else {
+                conn1.value = '～';
+            }
+            generateReport();
+        }
+
+        function calcOvertime() {
+            const startStr = document.getElementById('start-time').value;
+            const endStr = document.getElementById('end-time').value;
+            const conn1 = document.getElementById('conn-1').value;
+            const conn2 = document.getElementById('conn-2').value;
+
+            const standardStartMin = getMinutes('09:00');
+            const standardEndMin = getMinutes('17:45');
+
+            const startMin = getMinutes(startStr);
+            const endMin = getMinutes(endStr);
+
+            let otMinutes = 0;
+
+            if (startMin < standardStartMin) {
+                otMinutes += (standardStartMin - startMin);
+                if (conn1 === '(休5)') otMinutes -= 5;
+            }
+
+            if (endMin > standardEndMin) {
+                otMinutes += (endMin - standardEndMin);
+                if (conn2 === '(休15)') otMinutes -= 15;
+            }
+
+            if (otMinutes < 0) otMinutes = 0;
+
+            const h = Math.floor(otMinutes / 60);
+            const m = otMinutes % 60;
+            const text = otMinutes > 0 ? `+${h}:${m.toString().padStart(2, '0')}` : "0:00";
+
+            const badge = document.getElementById('overtime-val');
+            badge.textContent = text;
+            badge.style.background = otMinutes > 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.1)';
+            badge.style.color = otMinutes > 0 ? '#34d399' : '#94a3b8';
+        }
+
+        function generateReport() {
+            const startType = document.getElementById('start-type').value;
+            const startTime = formatTime(document.getElementById('start-time').value);
+            const conn1 = document.getElementById('conn-1').value;
+
+            const midType = document.getElementById('middle-type').value;
+            const midCount = document.getElementById('visit-count').value;
+            const middle = midType + midCount;
+
+            const retType = document.getElementById('return-type').value;
+            const retTime = formatTime(document.getElementById('return-time').value);
+            let retPart = "";
+            if (retType) {
+                retPart = retType + retTime;
+            }
+
+            const conn2 = document.getElementById('conn-2').value;
+            const endContent = document.getElementById('end-content').value;
+            const endType = document.getElementById('end-type').value;
+            const endTime = formatTime(document.getElementById('end-time').value);
+
+            let result = `${startType}${startTime}${conn1}${middle}${retPart}${conn2}${endContent}${endType}${endTime}`;
+
+            document.getElementById('result-text').textContent = result;
+            calcOvertime();
+        }
+
+        function copyResult() {
+            const text = document.getElementById('result-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.btn-icon');
+                const original = btn.innerHTML;
+                btn.innerHTML = "✅";
+                setTimeout(() => btn.innerHTML = original, 1000);
+            });
+        }
+
+        const formInputs = document.querySelectorAll('input, select');
+        formInputs.forEach(el => {
+            el.addEventListener('input', () => {
+                generateReport();
+                calcOvertime();
+            });
         });
+
+        window.onload = () => {
+            generateReport();
+            calcOvertime();
+        };
     </script>
 </body>
 
