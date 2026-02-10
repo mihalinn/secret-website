@@ -17,9 +17,20 @@
 </head>
 
 <body>
+    <!-- Password Overlay -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-box card glass">
+            <h2>Security Check</h2>
+            <p>Enter access code to proceed.</p>
+            <input type="password" id="pass-input" placeholder="Access Code">
+            <button onclick="checkPass()">Unlock</button>
+            <p id="error-msg" style="color: #ff6b6b; display: none; margin-top: 5px;">Invalid Code</p>
+        </div>
+    </div>
+
     <div class="background-animation"></div>
 
-    <div class="container">
+    <div class="container" id="main-content" style="filter: blur(10px); pointer-events: none;">
         <header class="header">
             <div class="status-badge">
                 <span class="status-dot"></span>
@@ -82,6 +93,30 @@
         // Simple script to update last login time for demo purposes
         const now = new Date();
         document.getElementById('last-login').textContent = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+        // Password Protection Logic
+        function checkPass() {
+            const input = document.getElementById('pass-input').value;
+            // Simple hardcoded password for demonstration.
+            if(input === 'gakumas') {
+                document.getElementById('auth-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('main-content').style.filter = 'none';
+                    document.getElementById('main-content').style.pointerEvents = 'auto';
+                }, 500);
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+                document.getElementById('pass-input').value = '';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('pass-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkPass();
+            }
+        });
     </script>
 </body>
 
