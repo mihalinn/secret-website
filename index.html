@@ -31,122 +31,132 @@
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
 
-                <!-- Row 1: All selects and time inputs in ONE horizontal line -->
+                <!-- Main Horizontal Layout: Divided into 4 Groups -->
                 <div class="form-row">
-                    <!-- Start -->
-                    <div class="field">
-                        <label>始業</label>
-                        <select id="start-type" onchange="updateConnectors()">
-                            <option value="(出社)">(出社)</option>
-                            <option value="(早出)">(早出)</option>
-                            <option value="(直行)">(直行)</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>時刻</label>
-                        <div class="time-ctrl">
-                            <button onclick="adjTime('start-time', -15)">−</button>
-                            <input type="time" id="start-time" value="09:00" step="300">
-                            <button onclick="adjTime('start-time', 15)">+</button>
+
+                    <!-- Group 1: 始業 -->
+                    <div class="field-group">
+                        <div class="group-header">始業</div>
+                        <div class="group-body">
+                            <div class="field">
+                                <label>時刻設定</label>
+                                <div class="field-controls">
+                                    <select id="start-type" onchange="updateConnectors()">
+                                        <option value="(出社)">(出社)</option>
+                                        <option value="(早出)">(早出)</option>
+                                        <option value="(直行)">(直行)</option>
+                                    </select>
+                                    <div class="time-ctrl">
+                                        <button onclick="adjTime('start-time', -15)">−</button>
+                                        <input type="time" id="start-time" value="09:00" step="300">
+                                        <button onclick="adjTime('start-time', 15)">+</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="field-sep"></div>
 
-                    <!-- Connector 1 -->
-                    <div class="field">
-                        <label>接続</label>
-                        <select id="conn-1">
-                            <option value="～">～</option>
-                            <option value="(休5)">(休5)</option>
-                            <option value="(継続)">(継続)</option>
-                            <option value="">(なし)</option>
-                        </select>
-                    </div>
-
-                    <div class="field-sep"></div>
-
-                    <!-- Middle -->
-                    <div class="field">
-                        <label>業務</label>
-                        <select id="middle-type">
-                            <option value="外勤">外勤</option>
-                            <option value="外勤同行">外勤同行</option>
-                            <option value="内勤">内勤</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>件数</label>
-                        <select id="visit-count">
-                            <option value="1件">1件</option>
-                            <option value="2件">2件</option>
-                            <option value="3件">3件</option>
-                            <option value="4件">4件</option>
-                            <option value="5件">5件</option>
-                            <option value="">-</option>
-                        </select>
-                    </div>
-
-                    <div class="field-sep"></div>
-
-                    <!-- Return -->
-                    <div class="field">
-                        <label>帰着</label>
-                        <select id="return-type">
-                            <option value="(帰社)">(帰社)</option>
-                            <option value="(直帰)">(直帰)</option>
-                            <option value="">(なし)</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>時刻</label>
-                        <div class="time-ctrl">
-                            <button onclick="adjTime('return-time', -15)">−</button>
-                            <input type="time" id="return-time" value="16:00" step="300">
-                            <button onclick="adjTime('return-time', 15)">+</button>
+                    <!-- Group 2: 業務 -->
+                    <div class="field-group">
+                        <div class="group-header">業務</div>
+                        <div class="group-body">
+                            <div class="field">
+                                <label>接続</label>
+                                <select id="conn-1">
+                                    <option value="～">～</option>
+                                    <option value="(休5)">(休5)</option>
+                                    <option value="(継続)">(継続)</option>
+                                    <option value="">(なし)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>件数</label>
+                                <div class="field-controls">
+                                    <select id="middle-type">
+                                        <option value="外勤">外勤</option>
+                                        <option value="外勤同行">外勤同行</option>
+                                        <option value="内勤">内勤</option>
+                                    </select>
+                                    <select id="visit-count" class="xs-select">
+                                        <option value="1件">1件</option>
+                                        <option value="2件">2件</option>
+                                        <option value="3件">3件</option>
+                                        <option value="4件">4件</option>
+                                        <option value="5件">5件</option>
+                                        <option value="">-</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="field-sep"></div>
 
-                    <!-- Connector 2 -->
-                    <div class="field">
-                        <label>接続</label>
-                        <select id="conn-2">
-                            <option value="(継続)">(継続)</option>
-                            <option value="～">～</option>
-                            <option value="(休15)">(休15)</option>
-                            <option value="">(なし)</option>
-                        </select>
+                    <!-- Group 3: 帰着 -->
+                    <div class="field-group">
+                        <div class="group-header">帰着</div>
+                        <div class="group-body">
+                            <div class="field">
+                                <label>時刻</label>
+                                <div class="field-controls">
+                                    <select id="return-type">
+                                        <option value="(帰社)">(帰社)</option>
+                                        <option value="(直帰)">(直帰)</option>
+                                        <option value="">(なし)</option>
+                                    </select>
+                                    <div class="time-ctrl">
+                                        <button onclick="adjTime('return-time', -15)">−</button>
+                                        <input type="time" id="return-time" value="16:00" step="300">
+                                        <button onclick="adjTime('return-time', 15)">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>接続</label>
+                                <select id="conn-2">
+                                    <option value="(継続)">(継続)</option>
+                                    <option value="～">～</option>
+                                    <option value="(休15)">(休15)</option>
+                                    <option value="">(なし)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="field-sep"></div>
 
-                    <!-- End -->
-                    <div class="field">
-                        <label>付帯</label>
-                        <select id="end-content">
-                            <option value="付帯業務">付帯業務</option>
-                            <option value="事務処理">事務処理</option>
-                            <option value="会議">会議</option>
-                            <option value="">(なし)</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>終業</label>
-                        <select id="end-type">
-                            <option value="(退社)">(退社)</option>
-                            <option value="(直帰)">(直帰)</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>時刻</label>
-                        <div class="time-ctrl">
-                            <button onclick="adjTime('end-time', -15)">−</button>
-                            <input type="time" id="end-time" value="17:45" step="300">
-                            <button onclick="adjTime('end-time', 15)">+</button>
+                    <!-- Group 4: 就業 -->
+                    <div class="field-group">
+                        <div class="group-header">就業</div>
+                        <div class="group-body">
+                            <div class="field">
+                                <label>付帯</label>
+                                <select id="end-content">
+                                    <option value="付帯業務">付帯業務</option>
+                                    <option value="事務処理">事務処理</option>
+                                    <option value="会議">会議</option>
+                                    <option value="">(なし)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>時刻</label>
+                                <div class="field-controls">
+                                    <select id="end-type">
+                                        <option value="(退社)">(退社)</option>
+                                        <option value="(直帰)">(直帰)</option>
+                                    </select>
+                                    <div class="time-ctrl">
+                                        <button onclick="adjTime('end-time', -15)">−</button>
+                                        <input type="time" id="end-time" value="17:45" step="300">
+                                        <button onclick="adjTime('end-time', 15)">+</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Result Area -->
