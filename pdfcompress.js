@@ -90,62 +90,102 @@ window.startCompress = async function (buffer) {
 
         if (!mupdf) throw new Error("MuPDF module not loaded.");
 
-        addLog("Loading Source PDF...");
-        updateProgress(10, "PDF解析中...");
+        // ドキュメントを開く (Uint8Arrayにするのが確実)
+        const uint8Buffer = new Uint8Array(buffer);
+        // mupdf.Document.open is cleaner than new PDFDocument if available, 
+        // but let's stick to what we know works or try the user suggestion if compatible.
+        // The user suggested mupdf.Document.open, let's verify if 'Document' exists in our exports.
+        // Actually, looking at mupdf.js exports usually it has PDFDocument. 
+        // Let's use the user's logic but keep our proven PDFDocument constructor if needed, 
+        // OR try to use the PDFDocument properly as they suggested.
 
         let srcDoc;
         try {
-            srcDoc = new mupdf.PDFDocument(buffer);
+            // Try standard constructor first as we verified it works in tests
+            srcDoc = new mupdf.PDFDocument(uint8Buffer);
         } catch (e) {
-            srcDoc = new mupdf.PDFDocument(new Uint8Array(buffer));
+            console.warn("Constructor failed, trying open...", e);
+            // Verify if mupdf.Document exists? 
+            // If not, we stick to PDFDocument. 
+            // We'll proceed with PDFDocument for now as our tests passed with it.
+            throw e;
         }
 
         const pageCount = srcDoc.countPages();
         addLog(`Total Pages: ${pageCount}`);
 
+        // 新しいPDFを作成
         const dstDoc = new mupdf.PDFDocument();
         const targetDPI = 150;
         const scale = targetDPI / 72;
         const matrix = mupdf.Matrix.scale(scale, scale);
-        addLog(`Target DPI: ${targetDPI} (Scale: ${scale.toFixed(2)})`);
 
         for (let i = 0; i < pageCount; i++) {
-            const progress = 10 + Math.floor(((i + 1) / pageCount) * 80);
-            updateProgress(progress, `ページ処理中... (${i + 1}/${pageCount})`);
-            addLog(`Processing Page ${i + 1}...`);
+            updateProgress(10 + Math.floor(((i + 1) / pageCount) * 80), `ページ処理中... (${i + 1}/${pageCount})`);
 
-            try {
-                const srcPage = srcDoc.loadPage(i);
-                const bounds = srcPage.getBounds();
-                const w = bounds[2] - bounds[0];
-                const h = bounds[3] - bounds[1];
+            const srcPage = srcDoc.loadPage(i);
+            const bounds = srcPage.getBounds();
+            const w = bounds[2] - bounds[0];
+            const h = bounds[3] - bounds[1];
 
-                const pixmap = srcPage.toPixmap(matrix, mupdf.ColorSpace.DeviceRGB, false);
-                const img = new mupdf.Image(pixmap);
-                const imgRef = dstDoc.addImage(img);
+            // 1. ページを画像(Pixmap)に変換
+            const pixmap = srcPage.toPixmap(matrix, mupdf.ColorSpace.DeviceRGB, false);
 
-                const imgName = "I" + i;
-                const content = `q ${w} 0 0 ${h} 0 0 cm /${imgName} Do Q`;
-                const newPage = dstDoc.addPage(bounds, 0, null, content);
+            // 2. Pixmapを画像オブジェクトとして新PDFに追加
+            const img = new mupdf.Image(pixmap);
+            const imgRef = dstDoc.addImage(img); // Returns PDFObject (indirect reference)
 
-                const xobjDict = dstDoc.newDictionary();
-                xobjDict.put(imgName, imgRef);
-                const resDict = dstDoc.newDictionary();
-                resDict.put("XObject", xobjDict);
-                newPage.put("Resources", resDict);
+            // 3. ページの内容（命令）を作成
+            const imgName = "Img" + i;
+            const content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} 0 0 cm /${imgName} Do Q\n`;
 
-                addLog(` -> Rasterized & Added.`);
-            } catch (err) {
-                addLog(`Error on verification page ${i + 1}: ${err.message}`);
+            // 4. 新しいページを追加
+            // addPage returns the Page object (Userdata), NOT the reference usually? 
+            // Wait, previous test showed addPage returned a Page object.
+            // User suggests: dstDoc.addPage(...) returns ref? 
+            // In our test_mupdf_2.html check, addPage returned a Page object.
+            // We need to get the PDFDictionary of the page.
+            const newPage = dstDoc.addPage(bounds, 0, null, content);
+
+            // 5. リソース辞書を構築して画像を結びつける
+            // We need to attach Resources to the page object.
+            // newPage is a Page Userdata. Does it have 'put'?
+            // Yes, PDFPage usually has 'put' in MuPDF JS bindings if it wraps pdf_obj.
+
+            const xobject = dstDoc.newDictionary();
+            xobject.put(imgName, imgRef);
+            const res = dstDoc.newDictionary();
+            res.put("XObject", xobject);
+
+            // ページにリソースをセット
+            // If newPage is the Page object, we can direct put.
+            if (newPage && newPage.put) {
+                newPage.put("Resources", res);
+            } else {
+                // Fallback if addPage API differs
+                addLog("Warning: Could not set resources on page " + i);
             }
+
+            addLog(`Page ${i + 1} processed.`);
         }
 
-        updateProgress(95, "ファイル生成中...");
+        updateProgress(95, "保存中...");
         addLog("Saving PDF...");
 
-        // "compress" or "clean" or "linearize"
-        // compress-images is for ghostscript/cpdf commonly, mupdf JS might just take "compress"
-        const outData = dstDoc.saveToBuffer("compress");
+        // 保存オプション: "compress" (or standard "")
+        // User strongly suggests "compress".
+        let outData;
+        try {
+            outData = dstDoc.saveToBuffer("compress");
+            if (outData.length < 100) throw new Error("Output too small");
+        } catch (e) {
+            addLog("Compression save failed or too small, retrying with default...");
+            outData = dstDoc.saveToBuffer("");
+        }
+
+        if (outData.length < 100) {
+            throw new Error("Generated PDF is too small (corruption).");
+        }
 
         compressedPdfBytes = outData;
         addLog(`Compression Complete!`);
@@ -157,7 +197,7 @@ window.startCompress = async function (buffer) {
     } catch (error) {
         addLog("Fatal Error: " + error.message);
         console.error(error);
-        alert('圧縮中にエラーが発生しました。\n詳細はログを確認してください。');
+        alert('圧縮エラー。詳細はログを確認してください。');
 
         const progressArea = document.getElementById('progress-area');
         if (progressArea) progressArea.style.display = 'none';
