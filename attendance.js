@@ -1,5 +1,5 @@
 // ============================================================
-//  勤怠詳細作成ツール - app.js
+//  勤怠詳細作成ツール - attendance.js
 // ============================================================
 
 // --------------------------------------------------
@@ -194,6 +194,33 @@ function generateReport() {
     const result = `${startType}${startTime}${conn1}${middle}${middle2}${retPart}${conn2}${endContent}${endType}${endTime}`;
 
     document.getElementById('result-text').textContent = result;
+
+    // 早出なのに09:00以降の検証
+    const startEl = document.getElementById('start-time');
+    const startMin = getMinutes(val('start-time'));
+    const stdStartMin = getMinutes(STANDARD_START);
+
+    if (val('start-type') === '(早出)' && startMin >= stdStartMin) {
+        startEl.style.borderColor = '#f87171';
+        startEl.style.boxShadow = '0 0 0 1px rgba(248,113,113,0.5)';
+    } else {
+        startEl.style.borderColor = '';
+        startEl.style.boxShadow = '';
+    }
+
+    // 帰着時刻 > 就業時刻の検証
+    const retEl = document.getElementById('return-time');
+    const returnMin = getMinutes(val('return-time'));
+    const endMin = getMinutes(val('end-time'));
+
+    if (returnMin > endMin) {
+        retEl.style.borderColor = '#f87171';
+        retEl.style.boxShadow = '0 0 0 1px rgba(248,113,113,0.5)';
+    } else {
+        retEl.style.borderColor = '';
+        retEl.style.boxShadow = '';
+    }
+
     calcOvertime();
 }
 
@@ -231,34 +258,9 @@ function resetAll() {
 }
 
 // --------------------------------------------------
-//  テーマ切替
-// --------------------------------------------------
-function toggleTheme() {
-    const root = document.documentElement;
-    const isLight = root.getAttribute('data-theme') === 'light';
-    const newTheme = isLight ? 'dark' : 'light';
-
-    root.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeButton(newTheme);
-    calcOvertime(); // 色を再適用
-}
-
-/** テーマボタンのアイコンを更新 */
-function updateThemeButton(theme) {
-    const btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = theme === 'light' ? '\u2600' : '\u263E';
-}
-
-// --------------------------------------------------
 //  初期化
 // --------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
-    // 保存済みテーマを適用
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeButton(savedTheme);
-
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', () => {
@@ -266,6 +268,18 @@ window.addEventListener('DOMContentLoaded', () => {
             calcOvertime();
         });
     });
+
+    // 時刻入力にマウスホイール対応（1分刻み）
+    document.querySelectorAll('input[type="time"]').forEach(el => {
+        el.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1 : -1;
+            adjTime(el.id, delta);
+        }, { passive: false });
+    });
+
+    // テーマ変更時に色を再適用
+    window.addEventListener('themechange', () => calcOvertime());
 
     generateReport();
     calcOvertime();

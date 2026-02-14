@@ -1,5 +1,5 @@
 /* ============================================================
-   勤怠詳細作成ツール - style.css
+   共通スタイル - common.css
    ============================================================ */
 
 /* --------------------------------------------------
@@ -171,75 +171,7 @@ h1 {
 }
 
 /* --------------------------------------------------
-   Reset Button (top-right corner)
-   -------------------------------------------------- */
-.btn-reset-corner {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--glass-border);
-    color: var(--text-secondary);
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, color 0.15s;
-    z-index: 1;
-}
-
-.btn-reset-corner:hover {
-    background: rgba(248, 113, 113, 0.2);
-    color: #f87171;
-    border-color: rgba(248, 113, 113, 0.4);
-}
-
-/* --------------------------------------------------
-   Control Grid  (8 cols × 4 rows)
-   -------------------------------------------------- */
-.ctrl-grid {
-    display: grid;
-    grid-template-columns: repeat(8, auto);
-    gap: 6px 10px;
-    align-items: center;
-    overflow-x: auto;
-    padding-bottom: 10px;
-}
-
-/* Grid Labels */
-.lbl {
-    font-weight: 400;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.lbl.main {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    height: 1.2rem;
-    line-height: 1.2rem;
-    padding-bottom: 2px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.lbl.sub {
-    font-size: 0.7rem;
-    margin-bottom: 4px;
-    opacity: 0.7;
-}
-
-/* Empty cell spacer */
-.cell-empty {
-    min-height: 34px;
-}
-
-/* --------------------------------------------------
-   Form Inputs (select, time, text)
+   Common Form Inputs
    -------------------------------------------------- */
 select,
 input[type="time"],
@@ -266,188 +198,6 @@ select {
     background-position: right 0.4rem center;
     background-size: 8px;
     min-width: 70px;
-}
-
-input[type="time"]::-webkit-calendar-picker-indicator {
-    display: none;
-}
-
-input[type="time"] {
-    text-align: center;
-    width: 72px;
-    padding: 0 4px;
-    border-radius: 0;
-    font-variant-numeric: tabular-nums;
-}
-
-/* --------------------------------------------------
-   Time Controls  (‹ − [HH:MM] + ›)
-   -------------------------------------------------- */
-.time-ctrl {
-    display: flex;
-    align-items: center;
-    height: 34px;
-    flex-shrink: 0;
-}
-
-.time-ctrl button {
-    background: var(--btn-time-bg);
-    border: 1px solid var(--glass-border);
-    color: var(--accent);
-    width: 28px;
-    height: 100%;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-    flex-shrink: 0;
-}
-
-.time-ctrl button:first-child {
-    border-radius: 6px 0 0 6px;
-    border-right: none;
-}
-
-.time-ctrl button:last-child {
-    border-radius: 0 6px 6px 0;
-    border-left: none;
-}
-
-.time-ctrl button:not(:first-child):not(:last-child) {
-    border-radius: 0;
-}
-
-.time-ctrl button:hover {
-    background: var(--btn-time-hover);
-}
-
-.time-ctrl button:active {
-    background: var(--btn-time-active);
-}
-
-/* Fine-adjustment buttons (±1 min) */
-.btn-fine {
-    width: 22px !important;
-    font-size: 0.85rem !important;
-    opacity: 0.7;
-}
-
-.btn-fine:hover {
-    opacity: 1;
-}
-
-/* --------------------------------------------------
-   Result / Preview Area
-   -------------------------------------------------- */
-.preview-area {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-    padding: 0.75rem 1rem;
-    background: var(--preview-bg);
-    border-radius: 10px;
-    border: 1px solid var(--glass-border);
-}
-
-.result-box {
-    flex-grow: 1;
-    font-size: 1rem;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 0.02em;
-    cursor: text;
-    padding: 2px 4px;
-    border-radius: 4px;
-    outline: none;
-}
-
-.result-box:focus {
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 0 1px var(--accent);
-}
-
-.preview-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
-    margin-left: auto;
-    padding-left: 0.75rem;
-    border-left: 1px solid var(--glass-border);
-}
-
-.btn-icon {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 0.35rem 0.7rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.15s;
-    white-space: nowrap;
-}
-
-.btn-icon:hover {
-    background: rgba(56, 189, 248, 0.1);
-}
-
-.overtime-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-}
-
-.overtime-label {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    letter-spacing: 0.05em;
-    opacity: 0.8;
-}
-
-.overtime-badge {
-    display: flex;
-    align-items: center;
-    padding: 0.3rem 0.5rem;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    font-weight: 600;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    color: #94a3b8;
-    white-space: nowrap;
-}
-
-.overtime-badge.copyable {
-    cursor: pointer;
-    transition: opacity 0.15s;
-}
-
-.overtime-badge.copyable:hover {
-    opacity: 0.8;
-}
-
-.ot-part {
-    cursor: pointer;
-    padding: 1px 3px;
-    border-radius: 3px;
-    transition: background 0.15s;
-}
-
-.ot-part:hover {
-    background: var(--ot-hover-bg);
-}
-
-.ot-sep {
-    opacity: 0.5;
-    margin: 0 1px;
 }
 
 /* --------------------------------------------------
@@ -478,7 +228,26 @@ input[type="time"] {
 }
 
 /* --------------------------------------------------
-   Light Mode Overrides
+   Common Button Styles
+   -------------------------------------------------- */
+.btn-icon {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.btn-icon:hover {
+    background: rgba(56, 189, 248, 0.1);
+}
+
+/* --------------------------------------------------
+   Light Mode Common Overrides
    -------------------------------------------------- */
 [data-theme="light"] h1 {
     background: linear-gradient(to right, #1e293b, #64748b);
@@ -494,26 +263,57 @@ input[type="time"] {
     background: rgba(16, 185, 129, 0.08);
 }
 
-[data-theme="light"] .btn-reset-corner {
+[data-theme="light"] .btn-theme-toggle {
     background: rgba(0, 0, 0, 0.04);
-}
-
-[data-theme="light"] .btn-reset-corner:hover {
-    background: rgba(248, 113, 113, 0.12);
-}
-
-[data-theme="light"] .result-box:focus {
-    background: rgba(0, 0, 0, 0.03);
 }
 
 [data-theme="light"] .btn-icon:hover {
     background: rgba(2, 132, 199, 0.08);
 }
 
-[data-theme="light"] .btn-theme-toggle {
-    background: rgba(0, 0, 0, 0.04);
+/* --------------------------------------------------
+   Navigation (Tool Cards)
+   -------------------------------------------------- */
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
 }
 
-[data-theme="light"] .btn-fine {
-    opacity: 0.5;
+.tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.tool-card-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.tool-card-title {
+    font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.tool-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.tool-card-arrow {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: auto;
 }
