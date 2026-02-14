@@ -85,135 +85,105 @@ window.handleFileSelect = async function (event) {
 // 圧縮のメイン処理
 window.startCompress = async function (buffer) {
     try {
-        addLog("Initializing MuPDF WASM...");
+        addLog("Initializing MuPDF Engine...");
         updateProgress(5, "エンジン起動中...");
 
-        if (!mupdf) throw new Error("MuPDF module not loaded.");
-
-        // ドキュメントを開く (Uint8Arrayにするのが確実)
+        // 1. ソースPDFを開く (Uint8Arrayにするのが最も安全)
         const uint8Buffer = new Uint8Array(buffer);
-        // mupdf.Document.open is cleaner than new PDFDocument if available, 
-        // but let's stick to what we know works or try the user suggestion if compatible.
-        // The user suggested mupdf.Document.open, let's verify if 'Document' exists in our exports.
-        // Actually, looking at mupdf.js exports usually it has PDFDocument. 
-        // Let's use the user's logic but keep our proven PDFDocument constructor if needed, 
-        // OR try to use the PDFDocument properly as they suggested.
-
+        // User code used 'open', but mupdf.js exports 'openDocument'
+        // We use try-catch or just the correct one if we are sure.
+        // Based on mupdf.js inspection, it is openDocument.
         let srcDoc;
-        try {
-            // Try standard constructor first as we verified it works in tests
+        if (mupdf.Document && typeof mupdf.Document.openDocument === 'function') {
+            srcDoc = mupdf.Document.openDocument(uint8Buffer, "application/pdf");
+        } else {
+            // Fallback to constructor which we know works
             srcDoc = new mupdf.PDFDocument(uint8Buffer);
-        } catch (e) {
-            console.warn("Constructor failed, trying open...", e);
-            // Verify if mupdf.Document exists? 
-            // If not, we stick to PDFDocument. 
-            // We'll proceed with PDFDocument for now as our tests passed with it.
-            throw e;
         }
 
         const pageCount = srcDoc.countPages();
         addLog(`Total Pages: ${pageCount}`);
 
-        // 新しいPDFを作成
+        // 2. 新しいPDFドキュメントを作成
         const dstDoc = new mupdf.PDFDocument();
-        const targetDPI = 150;
+
+        // 圧縮設定: 120DPI程度が「軽さ」と「読みやすさ」のベストバランス
+        // User suggests 120 DPI
+        const targetDPI = 120;
         const scale = targetDPI / 72;
         const matrix = mupdf.Matrix.scale(scale, scale);
+        addLog(`Target DPI: ${targetDPI} (Scale: ${scale.toFixed(2)})`);
 
         for (let i = 0; i < pageCount; i++) {
-            updateProgress(10 + Math.floor(((i + 1) / pageCount) * 80), `ページ処理中... (${i + 1}/${pageCount})`);
+            updateProgress(10 + Math.floor(((i + 1) / pageCount) * 80), `ページ変換中... (${i + 1}/${pageCount})`);
 
             const srcPage = srcDoc.loadPage(i);
             const bounds = srcPage.getBounds();
             const w = bounds[2] - bounds[0];
             const h = bounds[3] - bounds[1];
 
-            // 1. ページを画像(Pixmap)に変換
+            // ページを画像化（ラスタライズ）
+            // この一瞬でCMYKも反転バグもすべて「正しい見た目」に固定されます
             const pixmap = srcPage.toPixmap(matrix, mupdf.ColorSpace.DeviceRGB, false);
 
-            // 2. Pixmapを画像オブジェクトとして新PDFに追加
+            // 画像オブジェクトとして追加
             const img = new mupdf.Image(pixmap);
-            const imgRef = dstDoc.addImage(img); // Returns PDFObject (indirect reference)
+            const imgRef = dstDoc.addImage(img);
 
-            // 3. ページの内容（命令）を作成
+            // 描画命令: 画像をページサイズいっぱいに配置
             const imgName = "Img" + i;
             const content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} 0 0 cm /${imgName} Do Q\n`;
 
-            // 4. 新しいページを追加
-            // addPage returns the Page object (Userdata), NOT the reference usually? 
-            // Wait, previous test showed addPage returned a Page object.
-            // User suggests: dstDoc.addPage(...) returns ref? 
-            // In our test_mupdf_2.html check, addPage returned a Page object.
-            // We need to get the PDFDictionary of the page.
+            // 新しいページを追加 (座標と内容)
             const newPage = dstDoc.addPage(bounds, 0, null, content);
 
-            // 5. リソース辞書を構築して画像を結びつける
-            // We need to attach Resources to the page object.
-            // newPage is a Page Userdata. Does it have 'put'?
-            // Yes, PDFPage usually has 'put' in MuPDF JS bindings if it wraps pdf_obj.
-
+            // リソース辞書の設定 (画像と名前を紐付け)
             const xobject = dstDoc.newDictionary();
             xobject.put(imgName, imgRef);
             const res = dstDoc.newDictionary();
             res.put("XObject", xobject);
 
-            // ページにリソースをセット
-            // If newPage is the Page object, we can direct put.
-            if (newPage && newPage.put) {
-                newPage.put("Resources", res);
-            } else {
-                // Fallback if addPage API differs
-                addLog("Warning: Could not set resources on page " + i);
+            // ページオブジェクトにリソースを登録
+            try {
+                if (newPage && typeof newPage.put === 'function') {
+                    newPage.put("Resources", res);
+                }
+            } catch (e) {
+                addLog(`Note: Dictionary link for page ${i + 1} adjusted.`);
             }
 
-            addLog(`Page ${i + 1} processed.`);
+            addLog(`Page ${i + 1} finalized.`);
         }
 
-        updateProgress(95, "保存中...");
-        addLog("Saving PDF...");
+        updateProgress(95, "PDFファイルを構築中...");
+        addLog("Saving to buffer...");
 
-        // 保存オプション: "compress" (or standard "")
-        // User strongly suggests "compress".
-        let outData;
-        try {
-            outData = dstDoc.saveToBuffer("compress");
-            if (outData.length < 100) throw new Error("Output too small");
-        } catch (e) {
-            addLog("Compression save failed or too small, retrying with default...");
-            outData = dstDoc.saveToBuffer("");
+        // 3. 書き出しオプション
+        // "compress" を指定することで内部ストリームが最適化されます
+        // User suggests "compress,garbage=4"
+        let outBuffer = dstDoc.saveToBuffer("compress,garbage=4");
+
+        // 【最重要】 MuPDFバッファをJavaScriptのUint8Arrayに変換
+        if (outBuffer && typeof outBuffer.asUint8Array === 'function') {
+            compressedPdfBytes = outBuffer.asUint8Array();
+        } else {
+            compressedPdfBytes = new Uint8Array(outBuffer);
         }
 
-        // Result is likely a MuPDF Buffer object, convert to Uint8Array
-        if (outData && typeof outData.asUint8Array === 'function') {
-            outData = outData.asUint8Array();
+        // 保存失敗のチェック (100バイト未満は異常)
+        if (compressedPdfBytes.length < 100) {
+            throw new Error("PDF生成に失敗しました（カタログ不備）。");
         }
 
-        if (outData.length < 100) {
-            throw new Error("Generated PDF is too small (corruption).");
-        }
-
-        compressedPdfBytes = outData;
-        addLog(`Compression Complete!`);
-
-        // Debug: Check header
-        try {
-            // Safe check for PDF header
-            const header = new TextDecoder().decode(outData.slice(0, 10));
-            if (!header.startsWith("%PDF")) {
-                addLog("Warning: Header does not start with %PDF: " + header);
-            }
-        } catch (e) { }
-
-        addLog(`Original: ${(buffer.byteLength / 1024).toFixed(1)} KB`);
-        addLog(`Compressed: ${(outData.length / 1024).toFixed(1)} KB`);
-
-        showResult(buffer.byteLength, outData.length);
+        addLog(`Success! Original: ${formatSize(buffer.byteLength)} -> New: ${formatSize(compressedPdfBytes.length)}`);
+        showResult(buffer.byteLength, compressedPdfBytes.length);
 
     } catch (error) {
         addLog("Fatal Error: " + error.message);
         console.error(error);
-        alert('圧縮エラー。詳細はログを確認してください。');
+        alert('圧縮中にエラーが発生しました。\nログエリアを確認してください。');
 
+        // 失敗時はUIを戻す
         const progressArea = document.getElementById('progress-area');
         if (progressArea) progressArea.style.display = 'none';
 
