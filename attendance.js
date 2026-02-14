@@ -221,6 +221,19 @@ function generateReport() {
         retEl.style.boxShadow = '';
     }
 
+    // 就業時刻 < 17:45 の検証
+    const endEl = document.getElementById('end-time');
+    const endMin2 = getMinutes(val('end-time'));
+    const stdEndMin = getMinutes(STANDARD_END);
+
+    if (endMin2 < stdEndMin) {
+        endEl.style.borderColor = '#f87171';
+        endEl.style.boxShadow = '0 0 0 1px rgba(248,113,113,0.5)';
+    } else {
+        endEl.style.borderColor = '';
+        endEl.style.boxShadow = '';
+    }
+
     calcOvertime();
 }
 

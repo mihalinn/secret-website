@@ -240,8 +240,8 @@ select {
    -------------------------------------------------- */
 .btn-theme-toggle {
     position: absolute;
-    top: 8px;
-    right: 44px;
+    top: 6px;
+    right: 52px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--glass-border);
     color: var(--text-secondary);
