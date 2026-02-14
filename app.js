@@ -65,7 +65,18 @@ function adjTime(id, mins) {
         el.value = DEFAULTS[id] || STANDARD_END;
     }
 
-    let cur = getMinutes(el.value) + mins;
+    let cur = getMinutes(el.value);
+
+    // ±15 の場合は15分刻みのキリの良い時間にスナップ
+    if (Math.abs(mins) === 15) {
+        if (mins > 0) {
+            cur = (Math.floor(cur / 15) + 1) * 15;
+        } else {
+            cur = (Math.ceil(cur / 15) - 1) * 15;
+        }
+    } else {
+        cur += mins;
+    }
 
     // 0:00 〜 23:59 にラップ
     if (cur < 0) cur += 24 * 60;
@@ -82,8 +93,15 @@ function adjTime(id, mins) {
 function updateConnectors() {
     const startType = val('start-type');
     const conn1 = document.getElementById('conn-1');
+    const startTime = document.getElementById('start-time');
 
-    conn1.value = (startType === '(早出)') ? '(休5)' : '～';
+    if (startType === '(早出)') {
+        conn1.value = '(休5)';
+        startTime.value = '08:30';
+    } else {
+        conn1.value = '～';
+        startTime.value = STANDARD_START;
+    }
     generateReport();
 }
 
@@ -120,7 +138,7 @@ function calcOvertime() {
 
     // 実績表示
     updateBadge('ot-actual', otMinutes);
-    // 申請表示（15分切り捨て）
+    // 申請表示（10分切り捨て）
     updateBadge('ot-round', roundedMin);
 }
 
