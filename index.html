@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Tool</title>
+    <title>勤怠詳細作成ツール</title>
 
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -20,6 +20,8 @@
     <div class="background-animation"></div>
 
     <div class="container" id="main-content">
+
+        <!-- ヘッダー -->
         <header class="header">
             <div class="status-badge">
                 <span class="status-dot"></span>
@@ -28,281 +30,176 @@
             <h1>Daily Report</h1>
         </header>
 
+        <!-- メインコンテンツ -->
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
+                <button class="btn-reset-corner" onclick="resetAll()" title="すべてリセット">&#x21ba;</button>
 
-                <!-- Main Horizontal Layout: Divided into 4 Groups -->
-                <div class="form-row">
+                <!-- 8列グリッド: ラベル2段 + コントロール2段 -->
+                <div class="ctrl-grid">
 
-                    <!-- Group 1: 始業 -->
-                    <div class="field-group">
-                        <div class="group-header">始業</div>
-                        <div class="group-body">
-                            <div class="field">
-                                <label>時刻設定</label>
-                                <div class="field-controls">
-                                    <select id="start-type" onchange="updateConnectors()">
-                                        <option value="(出社)">(出社)</option>
-                                        <option value="(早出)">(早出)</option>
-                                        <option value="(直行)">(直行)</option>
-                                    </select>
-                                    <div class="time-ctrl">
-                                        <button onclick="adjTime('start-time', -15)">−</button>
-                                        <input type="time" id="start-time" value="09:00" step="300">
-                                        <button onclick="adjTime('start-time', 15)">+</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- 行1: メインラベル -->
+                    <span class="lbl main">始業</span>
+                    <span class="lbl main"></span>
+                    <span class="lbl main">業務</span>
+                    <span class="lbl main">業務2</span>
+                    <span class="lbl main">帰着</span>
+                    <span class="lbl main"></span>
+                    <span class="lbl main">就業</span>
+                    <span class="lbl main"></span>
+
+                    <!-- 行2: サブラベル -->
+                    <span class="lbl sub">時刻設定</span>
+                    <span class="lbl sub">接続</span>
+                    <span class="lbl sub">件数</span>
+                    <span class="lbl sub">件数</span>
+                    <span class="lbl sub">時刻</span>
+                    <span class="lbl sub">接続</span>
+                    <span class="lbl sub">付帯</span>
+                    <span class="lbl sub">時刻</span>
+
+                    <!-- 行3: セレクト -->
+                    <select id="start-type" onchange="updateConnectors()">
+                        <option value="(出社)">(出社)</option>
+                        <option value="(早出)">(早出)</option>
+                        <option value="(直行)">(直行)</option>
+                    </select>
+
+                    <select id="conn-1">
+                        <option value="～">～</option>
+                        <option value="(休5)">(休5)</option>
+                        <option value="(継続)">(継続)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="middle-type">
+                        <option value="外勤">外勤</option>
+                        <option value="外勤同行">外勤同行</option>
+                        <option value="内勤">内勤</option>
+                    </select>
+
+                    <select id="middle-type-2">
+                        <option value="">(なし)</option>
+                        <option value="外勤">外勤</option>
+                        <option value="外勤同行">外勤同行</option>
+                        <option value="内勤">内勤</option>
+                    </select>
+
+                    <select id="return-type">
+                        <option value="(帰社)">(帰社)</option>
+                        <option value="(直帰)">(直帰)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="conn-2">
+                        <option value="(継続)">(継続)</option>
+                        <option value="～">～</option>
+                        <option value="(休15)">(休15)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="end-content">
+                        <option value="付帯業務">付帯業務</option>
+                        <option value="事務処理">事務処理</option>
+                        <option value="会議">会議</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="end-type">
+                        <option value="(退社)">(退社)</option>
+                        <option value="(直帰)">(直帰)</option>
+                    </select>
+
+                    <!-- 行4: 時刻・件数コントロール -->
+                    <div class="time-ctrl">
+                        <button class="btn-fine" onclick="adjTime('start-time', -1)">&lsaquo;</button>
+                        <button onclick="adjTime('start-time', -15)">&minus;</button>
+                        <input type="time" id="start-time" value="09:00" step="60">
+                        <button onclick="adjTime('start-time', 15)">+</button>
+                        <button class="btn-fine" onclick="adjTime('start-time', 1)">&rsaquo;</button>
                     </div>
 
-                    <div class="field-sep"></div>
+                    <div class="cell-empty"></div>
 
-                    <!-- Group 2: 業務 -->
-                    <div class="field-group">
-                        <div class="group-header">業務</div>
-                        <div class="group-body">
-                            <div class="field">
-                                <label>接続</label>
-                                <select id="conn-1">
-                                    <option value="～">～</option>
-                                    <option value="(休5)">(休5)</option>
-                                    <option value="(継続)">(継続)</option>
-                                    <option value="">(なし)</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>件数</label>
-                                <div class="field-controls">
-                                    <select id="middle-type">
-                                        <option value="外勤">外勤</option>
-                                        <option value="外勤同行">外勤同行</option>
-                                        <option value="内勤">内勤</option>
-                                    </select>
-                                    <select id="visit-count" class="xs-select">
-                                        <option value="1件">1件</option>
-                                        <option value="2件">2件</option>
-                                        <option value="3件">3件</option>
-                                        <option value="4件">4件</option>
-                                        <option value="5件">5件</option>
-                                        <option value="">-</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                    <select id="visit-count">
+                        <option value="1件">1件</option>
+                        <option value="2件">2件</option>
+                        <option value="3件">3件</option>
+                        <option value="4件">4件</option>
+                        <option value="5件">5件</option>
+                        <option value="6件">6件</option>
+                        <option value="7件">7件</option>
+                        <option value="8件">8件</option>
+                        <option value="">-</option>
+                    </select>
+
+                    <select id="visit-count-2">
+                        <option value="">-</option>
+                        <option value="1件">1件</option>
+                        <option value="2件">2件</option>
+                        <option value="3件">3件</option>
+                        <option value="4件">4件</option>
+                        <option value="5件">5件</option>
+                        <option value="6件">6件</option>
+                        <option value="7件">7件</option>
+                        <option value="8件">8件</option>
+                    </select>
+
+                    <div class="time-ctrl">
+                        <button class="btn-fine" onclick="adjTime('return-time', -1)">&lsaquo;</button>
+                        <button onclick="adjTime('return-time', -15)">&minus;</button>
+                        <input type="time" id="return-time" value="16:00" step="60">
+                        <button onclick="adjTime('return-time', 15)">+</button>
+                        <button class="btn-fine" onclick="adjTime('return-time', 1)">&rsaquo;</button>
                     </div>
 
-                    <div class="field-sep"></div>
+                    <div class="cell-empty"></div>
+                    <div class="cell-empty"></div>
 
-                    <!-- Group 3: 帰着 -->
-                    <div class="field-group">
-                        <div class="group-header">帰着</div>
-                        <div class="group-body">
-                            <div class="field">
-                                <label>時刻</label>
-                                <div class="field-controls">
-                                    <select id="return-type">
-                                        <option value="(帰社)">(帰社)</option>
-                                        <option value="(直帰)">(直帰)</option>
-                                        <option value="">(なし)</option>
-                                    </select>
-                                    <div class="time-ctrl">
-                                        <button onclick="adjTime('return-time', -15)">−</button>
-                                        <input type="time" id="return-time" value="16:00" step="300">
-                                        <button onclick="adjTime('return-time', 15)">+</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>接続</label>
-                                <select id="conn-2">
-                                    <option value="(継続)">(継続)</option>
-                                    <option value="～">～</option>
-                                    <option value="(休15)">(休15)</option>
-                                    <option value="">(なし)</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="time-ctrl">
+                        <button class="btn-fine" onclick="adjTime('end-time', -1)">&lsaquo;</button>
+                        <button onclick="adjTime('end-time', -15)">&minus;</button>
+                        <input type="time" id="end-time" value="17:45" step="60">
+                        <button onclick="adjTime('end-time', 15)">+</button>
+                        <button class="btn-fine" onclick="adjTime('end-time', 1)">&rsaquo;</button>
                     </div>
 
-                    <div class="field-sep"></div>
-
-                    <!-- Group 4: 就業 -->
-                    <div class="field-group">
-                        <div class="group-header">就業</div>
-                        <div class="group-body">
-                            <div class="field">
-                                <label>付帯</label>
-                                <select id="end-content">
-                                    <option value="付帯業務">付帯業務</option>
-                                    <option value="事務処理">事務処理</option>
-                                    <option value="会議">会議</option>
-                                    <option value="">(なし)</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>時刻</label>
-                                <div class="field-controls">
-                                    <select id="end-type">
-                                        <option value="(退社)">(退社)</option>
-                                        <option value="(直帰)">(直帰)</option>
-                                    </select>
-                                    <div class="time-ctrl">
-                                        <button onclick="adjTime('end-time', -15)">−</button>
-                                        <input type="time" id="end-time" value="17:45" step="300">
-                                        <button onclick="adjTime('end-time', 15)">+</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
 
-                <!-- Result Area -->
+                <!-- 結果エリア -->
                 <div class="preview-area">
                     <div class="result-box" id="result-text">...</div>
                     <div class="preview-actions">
-                        <button class="btn-icon" onclick="copyResult()" title="Copy">📋 Copy</button>
-                        <div class="overtime-badge" id="overtime-val">0:00</div>
+                        <button class="btn-icon" onclick="copyResult()" title="Copy">Copy</button>
+                        <div class="overtime-group">
+                            <span class="overtime-label">実績</span>
+                            <div class="overtime-badge">
+                                <span class="ot-part copyable" id="ot-actual-h" onclick="copyText(this)"
+                                    title="時間をコピー">0</span>
+                                <span class="ot-sep">:</span>
+                                <span class="ot-part copyable" id="ot-actual-m" onclick="copyText(this)"
+                                    title="分をコピー">00</span>
+                            </div>
+                        </div>
+                        <div class="overtime-group">
+                            <span class="overtime-label">申請</span>
+                            <div class="overtime-badge">
+                                <span class="ot-part copyable" id="ot-round-h" onclick="copyText(this)"
+                                    title="時間をコピー">0</span>
+                                <span class="ot-sep">:</span>
+                                <span class="ot-part copyable" id="ot-round-m" onclick="copyText(this)"
+                                    title="分をコピー">00</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </section>
         </main>
     </div>
 
-    <script>
-        function formatTime(timeVal) {
-            if (!timeVal) return "";
-            return timeVal.replace(":", "");
-        }
-
-        function getMinutes(timeStr) {
-            if (!timeStr) return 0;
-            const [h, m] = timeStr.split(':').map(Number);
-            return h * 60 + m;
-        }
-
-        function adjTime(id, mins) {
-            const el = document.getElementById(id);
-            if (!el.value) {
-                if (id === 'return-time') el.value = '16:00';
-                else if (id === 'start-time') el.value = '09:00';
-                else el.value = '17:45';
-            }
-
-            let cur = getMinutes(el.value);
-            cur += mins;
-
-            if (cur < 0) cur += 24 * 60;
-            if (cur >= 24 * 60) cur -= 24 * 60;
-
-            const h = Math.floor(cur / 60);
-            const m = cur % 60;
-            el.value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
-            el.dispatchEvent(new Event('input'));
-            el.dispatchEvent(new Event('change'));
-        }
-
-        function updateConnectors() {
-            const startType = document.getElementById('start-type').value;
-            const conn1 = document.getElementById('conn-1');
-
-            if (startType === '(早出)') {
-                conn1.value = '(休5)';
-            } else {
-                conn1.value = '～';
-            }
-            generateReport();
-        }
-
-        function calcOvertime() {
-            const startStr = document.getElementById('start-time').value;
-            const endStr = document.getElementById('end-time').value;
-            const conn1 = document.getElementById('conn-1').value;
-            const conn2 = document.getElementById('conn-2').value;
-
-            const standardStartMin = getMinutes('09:00');
-            const standardEndMin = getMinutes('17:45');
-
-            const startMin = getMinutes(startStr);
-            const endMin = getMinutes(endStr);
-
-            let otMinutes = 0;
-
-            if (startMin < standardStartMin) {
-                otMinutes += (standardStartMin - startMin);
-                if (conn1 === '(休5)') otMinutes -= 5;
-            }
-
-            if (endMin > standardEndMin) {
-                otMinutes += (endMin - standardEndMin);
-                if (conn2 === '(休15)') otMinutes -= 15;
-            }
-
-            if (otMinutes < 0) otMinutes = 0;
-
-            const h = Math.floor(otMinutes / 60);
-            const m = otMinutes % 60;
-            const text = otMinutes > 0 ? `+${h}:${m.toString().padStart(2, '0')}` : "0:00";
-
-            const badge = document.getElementById('overtime-val');
-            badge.textContent = text;
-            badge.style.background = otMinutes > 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.1)';
-            badge.style.color = otMinutes > 0 ? '#34d399' : '#94a3b8';
-        }
-
-        function generateReport() {
-            const startType = document.getElementById('start-type').value;
-            const startTime = formatTime(document.getElementById('start-time').value);
-            const conn1 = document.getElementById('conn-1').value;
-
-            const midType = document.getElementById('middle-type').value;
-            const midCount = document.getElementById('visit-count').value;
-            const middle = midType + midCount;
-
-            const retType = document.getElementById('return-type').value;
-            const retTime = formatTime(document.getElementById('return-time').value);
-            let retPart = "";
-            if (retType) {
-                retPart = retType + retTime;
-            }
-
-            const conn2 = document.getElementById('conn-2').value;
-            const endContent = document.getElementById('end-content').value;
-            const endType = document.getElementById('end-type').value;
-            const endTime = formatTime(document.getElementById('end-time').value);
-
-            let result = `${startType}${startTime}${conn1}${middle}${retPart}${conn2}${endContent}${endType}${endTime}`;
-
-            document.getElementById('result-text').textContent = result;
-            calcOvertime();
-        }
-
-        function copyResult() {
-            const text = document.getElementById('result-text').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.querySelector('.btn-icon');
-                const original = btn.innerHTML;
-                btn.innerHTML = "✅ Copied";
-                setTimeout(() => btn.innerHTML = original, 1200);
-            });
-        }
-
-        const formInputs = document.querySelectorAll('input, select');
-        formInputs.forEach(el => {
-            el.addEventListener('input', () => {
-                generateReport();
-                calcOvertime();
-            });
-        });
-
-        window.onload = () => {
-            generateReport();
-            calcOvertime();
-        };
-    </script>
+    <script src="app.js"></script>
 </body>
 
 </html>

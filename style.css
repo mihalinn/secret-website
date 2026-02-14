@@ -1,3 +1,10 @@
+/* ============================================================
+   勤怠詳細作成ツール - style.css
+   ============================================================ */
+
+/* --------------------------------------------------
+   Design Tokens
+   -------------------------------------------------- */
 :root {
     --bg-gradient-start: #0f172a;
     --bg-gradient-end: #1e293b;
@@ -10,6 +17,9 @@
     --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
+/* --------------------------------------------------
+   Base Reset
+   -------------------------------------------------- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -28,7 +38,9 @@ body {
     overflow-x: hidden;
 }
 
-/* Ambient Background Animation */
+/* --------------------------------------------------
+   Background Animation
+   -------------------------------------------------- */
 .background-animation {
     position: fixed;
     top: -50%;
@@ -53,13 +65,29 @@ body {
     }
 }
 
+/* --------------------------------------------------
+   Layout
+   -------------------------------------------------- */
 .container {
     max-width: 1200px;
     width: 100%;
     z-index: 1;
 }
 
-/* Header */
+.grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.single-column.wide-layout {
+    grid-template-columns: 1fr;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* --------------------------------------------------
+   Header
+   -------------------------------------------------- */
 .header {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -72,6 +100,7 @@ h1 {
     letter-spacing: -0.03em;
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -96,7 +125,9 @@ h1 {
     box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
 }
 
-/* Glass Cards */
+/* --------------------------------------------------
+   Glass Card
+   -------------------------------------------------- */
 .card {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
@@ -107,104 +138,77 @@ h1 {
     box-shadow: var(--card-shadow);
 }
 
-/* Grid Layout */
-.grid {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.single-column.wide-layout {
-    grid-template-columns: 1fr;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
 .form-card {
+    position: relative;
     padding: 1.25rem 1.5rem;
 }
 
-/* ==============================
-   FORM ROW - Single horizontal line
-   ============================== */
-.form-row {
-    display: flex;
-    align-items: flex-start;
-    /* Align headers to top */
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--glass-border) transparent;
-}
-
-/* Field Group Container */
-.field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.group-header {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--accent);
-    padding: 2px 6px;
-    background: rgba(56, 189, 248, 0.1);
-    border-radius: 4px;
-    text-align: center;
-    letter-spacing: 0.1em;
-}
-
-.group-body {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-}
-
-/* Each field: label on top, control below */
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.field label {
-    font-size: 0.65rem;
+/* --------------------------------------------------
+   Reset Button (top-right corner)
+   -------------------------------------------------- */
+.btn-reset-corner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
     color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-    white-space: nowrap;
-    text-align: center;
-}
-
-.field-controls {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
     display: flex;
-    gap: 0;
     align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    z-index: 1;
 }
 
-.field-controls>select:first-child {
-    border-radius: 6px 0 0 6px;
-    border-right: none;
+.btn-reset-corner:hover {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.4);
 }
 
-/* Vertical separator between groups */
-.field-sep {
-    width: 2px;
-    height: 60px;
-    background: linear-gradient(to bottom, transparent, var(--glass-border), transparent);
-    flex-shrink: 0;
-    align-self: center;
-    margin: 0 4px;
-    margin-top: 20px;
+/* --------------------------------------------------
+   Control Grid  (8 cols × 4 rows)
+   -------------------------------------------------- */
+.ctrl-grid {
+    display: grid;
+    grid-template-columns: repeat(8, auto);
+    gap: 4px 8px;
+    align-items: center;
+    overflow-x: auto;
+    padding-bottom: 8px;
 }
 
-/* ==============================
-   INPUT STYLES
-   ============================== */
+/* Grid Labels */
+.lbl {
+    font-weight: 400;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.lbl.main {
+    font-size: 0.75rem;
+    height: 1rem;
+    line-height: 1rem;
+}
+
+.lbl.sub {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+}
+
+/* Empty cell spacer */
+.cell-empty {
+    min-height: 34px;
+}
+
+/* --------------------------------------------------
+   Form Inputs (select, time, text)
+   -------------------------------------------------- */
 select,
 input[type="time"],
 input[type="text"] {
@@ -219,6 +223,7 @@ input[type="text"] {
     line-height: 32px;
     white-space: nowrap;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 select {
@@ -231,7 +236,6 @@ select {
     min-width: 70px;
 }
 
-/* Hide native time icon in WebKit for cleaner look */
 input[type="time"]::-webkit-calendar-picker-indicator {
     display: none;
 }
@@ -244,9 +248,9 @@ input[type="time"] {
     font-variant-numeric: tabular-nums;
 }
 
-/* ==============================
-   TIME CONTROLS (+/- buttons)
-   ============================== */
+/* --------------------------------------------------
+   Time Controls  (‹ − [HH:MM] + ›)
+   -------------------------------------------------- */
 .time-ctrl {
     display: flex;
     align-items: center;
@@ -279,6 +283,10 @@ input[type="time"] {
     border-left: none;
 }
 
+.time-ctrl button:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
 .time-ctrl button:hover {
     background: rgba(56, 189, 248, 0.25);
 }
@@ -287,9 +295,20 @@ input[type="time"] {
     background: rgba(56, 189, 248, 0.4);
 }
 
-/* ==============================
-   PREVIEW / RESULT AREA
-   ============================== */
+/* Fine-adjustment buttons (±1 min) */
+.btn-fine {
+    width: 22px !important;
+    font-size: 0.85rem !important;
+    opacity: 0.7;
+}
+
+.btn-fine:hover {
+    opacity: 1;
+}
+
+/* --------------------------------------------------
+   Result / Preview Area
+   -------------------------------------------------- */
 .preview-area {
     display: flex;
     align-items: center;
@@ -335,6 +354,20 @@ input[type="time"] {
     background: rgba(56, 189, 248, 0.1);
 }
 
+.overtime-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.overtime-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .overtime-badge {
     padding: 0.35rem 0.6rem;
     border-radius: 6px;
@@ -346,21 +379,27 @@ input[type="time"] {
     white-space: nowrap;
 }
 
-/* ==============================
-   RESPONSIVE
-   ============================== */
-@media (max-width: 900px) {
-    .form-row {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
+.overtime-badge.copyable {
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
 
-    .field-sep {
-        display: none;
-    }
+.overtime-badge.copyable:hover {
+    opacity: 0.8;
+}
 
-    .field {
-        flex: 1 1 auto;
-        min-width: 70px;
-    }
+.ot-part {
+    cursor: pointer;
+    padding: 1px 3px;
+    border-radius: 3px;
+    transition: background 0.15s;
+}
+
+.ot-part:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.ot-sep {
+    opacity: 0.5;
+    margin: 0 1px;
 }
