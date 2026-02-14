@@ -183,12 +183,27 @@ window.startCompress = async function (buffer) {
             outData = dstDoc.saveToBuffer("");
         }
 
+        // Result is likely a MuPDF Buffer object, convert to Uint8Array
+        if (outData && typeof outData.asUint8Array === 'function') {
+            outData = outData.asUint8Array();
+        }
+
         if (outData.length < 100) {
             throw new Error("Generated PDF is too small (corruption).");
         }
 
         compressedPdfBytes = outData;
         addLog(`Compression Complete!`);
+
+        // Debug: Check header
+        try {
+            // Safe check for PDF header
+            const header = new TextDecoder().decode(outData.slice(0, 10));
+            if (!header.startsWith("%PDF")) {
+                addLog("Warning: Header does not start with %PDF: " + header);
+            }
+        } catch (e) { }
+
         addLog(`Original: ${(buffer.byteLength / 1024).toFixed(1)} KB`);
         addLog(`Compressed: ${(outData.length / 1024).toFixed(1)} KB`);
 
