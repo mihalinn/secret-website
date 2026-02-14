@@ -152,8 +152,13 @@ function updateBadge(prefix, minutes) {
     hEl.textContent = String(h);
     mEl.textContent = m.toString().padStart(2, '0');
 
-    const color = minutes > 0 ? '#34d399' : '#94a3b8';
-    const bg = minutes > 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.1)';
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const activeColor = isLight ? '#059669' : '#34d399';
+    const inactiveColor = isLight ? '#94a3b8' : '#94a3b8';
+    const activeBg = isLight ? 'rgba(5, 150, 105, 0.1)' : 'rgba(52, 211, 153, 0.2)';
+
+    const color = minutes > 0 ? activeColor : inactiveColor;
+    const bg = minutes > 0 ? activeBg : 'var(--ot-inactive-bg)';
 
     const badge = hEl.closest('.overtime-badge');
     badge.style.background = bg;
@@ -226,9 +231,34 @@ function resetAll() {
 }
 
 // --------------------------------------------------
+//  テーマ切替
+// --------------------------------------------------
+function toggleTheme() {
+    const root = document.documentElement;
+    const isLight = root.getAttribute('data-theme') === 'light';
+    const newTheme = isLight ? 'dark' : 'light';
+
+    root.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+    calcOvertime(); // 色を再適用
+}
+
+/** テーマボタンのアイコンを更新 */
+function updateThemeButton(theme) {
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = theme === 'light' ? '\u2600' : '\u263E';
+}
+
+// --------------------------------------------------
 //  初期化
 // --------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
+    // 保存済みテーマを適用
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeButton(savedTheme);
+
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', () => {
