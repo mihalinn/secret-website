@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF圧縮ツール</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="pdfcompress.css">
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="container" id="main-content">
+
+        <!-- ヘッダー -->
+        <header class="header">
+            <nav class="top-nav">
+                <a href="attendance.html" class="nav-link">勤怠詳細</a>
+                <a href="pdfcompress.html" class="nav-link active">PDF圧縮</a>
+            </nav>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                PDF Compressor (MuPDF Engine)
+            </div>
+            <h1>PDF Size Reducer</h1>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="grid single-column wide-layout">
+            <section class="card glass form-card" id="main-card">
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="テーマ切替" id="theme-btn">&#9790;</button>
+
+                <!-- ドロップゾーン -->
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-content">
+                        <div class="drop-zone-icon">PDF</div>
+                        <p class="drop-zone-text">ここにPDFをドラッグ&ドロップ</p>
+                        <p class="drop-zone-sub">またはクリックしてファイルを選択</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".pdf" hidden>
+                </div>
+
+                <!-- 設定パネル（ファイル選択後に表示） -->
+                <div class="settings-panel" id="settings-panel" style="display:none;">
+                    <div class="preview-row">
+                        <div class="preview-thumbnail" id="preview-thumbnail">
+                            <canvas id="preview-canvas"></canvas>
+                        </div>
+                        <div class="preview-info">
+                            <div class="file-info" id="file-info"></div>
+                            <div class="file-meta" id="file-meta"></div>
+                            <button class="btn-change-file"
+                                onclick="document.getElementById('file-input').click()">ファイルを変更</button>
+                        </div>
+                    </div>
+
+                    <!-- プリセット選択 -->
+                    <div class="preset-group">
+                        <label class="preset-title">圧縮モード</label>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" data-dpi="72" data-quality="40" onclick="selectPreset(this)">
+                                <span class="preset-name">高圧縮</span>
+                                <span class="preset-desc">最小サイズ・画質低め</span>
+                            </button>
+                            <button class="preset-btn active" data-dpi="96" data-quality="55"
+                                onclick="selectPreset(this)">
+                                <span class="preset-name">バランス</span>
+                                <span class="preset-desc">サイズと画質の両立</span>
+                            </button>
+                            <button class="preset-btn" data-dpi="150" data-quality="75" onclick="selectPreset(this)">
+                                <span class="preset-name">高品質</span>
+                                <span class="preset-desc">高画質・圧縮控えめ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 詳細設定（折りたたみ） -->
+                    <details class="advanced-settings">
+                        <summary class="advanced-toggle">詳細設定</summary>
+                        <div class="advanced-content">
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <label class="slider-label">DPI（解像度）</label>
+                                    <span class="slider-value" id="dpi-value">96</span>
+                                </div>
+                                <input type="range" id="dpi-slider" min="72" max="200" value="96" step="1"
+                                    class="slider">
+                                <div class="slider-hints">
+                                    <span>72 (低)</span>
+                                    <span>200 (高)</span>
+                                </div>
+                            </div>
+
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <label class="slider-label">JPEG品質</label>
+                                    <span class="slider-value" id="quality-value">55%</span>
+                                </div>
+                                <input type="range" id="quality-slider" min="30" max="95" value="55" step="1"
+                                    class="slider">
+                                <div class="slider-hints">
+                                    <span>30% (小)</span>
+                                    <span>95% (高品質)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- 推定サイズ -->
+                    <div class="estimate-bar" id="estimate-bar" style="display:none;">
+                        <span class="estimate-label">推定サイズ</span>
+                        <span class="estimate-value" id="estimate-value">-</span>
+                    </div>
+
+                    <button class="btn-compress" id="btn-compress" onclick="startCompress()">
+                        圧縮を開始
+                    </button>
+                </div>
+
+                <!-- プログレス（処理中に表示） -->
+                <div class="progress-area" id="progress-area" style="display:none;">
+                    <div class="progress-text" id="progress-text">処理中...</div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+                    </div>
+                    <div class="progress-detail" id="progress-detail"></div>
+                </div>
+
+                <!-- 結果（完了後に表示） -->
+                <div class="result-area" id="result-area" style="display:none;">
+                    <div class="size-compare">
+                        <div class="size-item">
+                            <span class="size-label">元サイズ</span>
+                            <span class="size-value" id="original-size">-</span>
+                        </div>
+                        <div class="size-arrow">→</div>
+                        <div class="size-item">
+                            <span class="size-label">圧縮後</span>
+                            <span class="size-value accent" id="compressed-size">-</span>
+                        </div>
+                        <div class="size-item">
+                            <span class="size-label">削減率</span>
+                            <span class="size-value accent" id="reduction-rate">-</span>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn-compress" id="btn-download" onclick="downloadResult()">ダウンロード</button>
+                        <button class="btn-icon" onclick="resetAll()">別のファイルを圧縮</button>
+                    </div>
+
+                    <!-- ログ表示エリア -->
+                    <div class="log-container" style="margin-top: 1rem; width: 100%;">
+                        <div style="text-align: right;">
+                            <button onclick="toggleLog()"
+                                style="background:none; border:none; color:var(--text-secondary); cursor:pointer; text-decoration:underline; font-size:0.9rem;">
+                                変換詳細ログを表示
+                            </button>
+                        </div>
+                        <textarea id="log-area" readonly
+                            style="display:none; width:100%; height:200px; margin-top:0.5rem; padding:0.5rem; border-radius:8px; background:rgba(0,0,0,0.05); border:1px solid var(--border-color); font-family:monospace; font-size:12px; resize:vertical;"></textarea>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="pdfcompress.js"></script>
+</body>
+
+</html>
