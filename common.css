@@ -59,8 +59,8 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 1.5rem;
+    align-items: flex-start;
+    padding: 3rem 1.5rem;
     overflow-x: hidden;
 }
 
@@ -117,6 +117,41 @@ body {
 .header {
     text-align: center;
     margin-bottom: 1.5rem;
+}
+
+/* --------------------------------------------------
+   Top Navigation Bar
+   -------------------------------------------------- */
+.top-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+}
+
+.nav-link:hover {
+    color: var(--accent);
+    background: var(--input-bg);
+    border-color: var(--glass-border);
+}
+
+.nav-link.active {
+    color: var(--accent);
+    background: var(--btn-time-bg);
+    border-color: var(--accent);
+    font-weight: 600;
+    pointer-events: none;
 }
 
 h1 {
@@ -293,11 +328,6 @@ select {
 .tool-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.tool-card-icon {
-    font-size: 2rem;
-    line-height: 1;
 }
 
 .tool-card-title {
