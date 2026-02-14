@@ -161,7 +161,7 @@ window.startCompress = async function (buffer) {
         // 3. 書き出しオプション
         // "compress" を指定することで内部ストリームが最適化されます
         // User suggests "compress,garbage=4"
-        let outBuffer = dstDoc.saveToBuffer("compress,garbage=4");
+        let outBuffer = dstDoc.saveToBuffer("compress,garbage=0");
 
         // 【最重要】 MuPDFバッファをJavaScriptのUint8Arrayに変換
         if (outBuffer && typeof outBuffer.asUint8Array === 'function') {
