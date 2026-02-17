@@ -39,6 +39,7 @@
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
                 <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
+                <button class="btn-theme-toggle" title="完了場所設定" id="btn-settings">&#9881;</button>
                 <button class="btn-reset-corner" title="すべてリセット" id="btn-reset-all">&#x21ba;</button>
 
                 <!-- 8列グリッド: ラベル2段 + コントロール2段 -->
@@ -85,43 +86,7 @@
                     </select>
 
                     <select id="middle-type-2">
-                        <option value="高崎市">高崎市</option>
-                        <option value="前橋市">前橋市</option>
-                        <option value="太田市">太田市</option>
-                        <option value="伊勢崎市">伊勢崎市</option>
-                        <option value="足利市">足利市</option>
-                        <option value="桐生市">桐生市</option>
-                        <option value="館林市">館林市</option>
-                        <option value="渋川市">渋川市</option>
-                        <option value="藤岡市">藤岡市</option>
-                        <option value="安中市">安中市</option>
-                        <option value="みどり市">みどり市</option>
-                        <option value="富岡市">富岡市</option>
-                        <option value="沼田市">沼田市</option>
-                        <option value="大泉町">大泉町</option>
-                        <option value="玉村町">玉村町</option>
-                        <option value="邑楽町">邑楽町</option>
-                        <option value="吉岡町">吉岡町</option>
-                        <option value="みなかみ町">みなかみ町</option>
-                        <option value="中之条町">中之条町</option>
-                        <option value="榛東村">榛東村</option>
-                        <option value="板倉町">板倉町</option>
-                        <option value="甘楽町">甘楽町</option>
-                        <option value="東吾妻町">東吾妻町</option>
-                        <option value="千代田町">千代田町</option>
-                        <option value="明和町">明和町</option>
-                        <option value="嬬恋村">嬬恋村</option>
-                        <option value="昭和村">昭和村</option>
-                        <option value="下仁田町">下仁田町</option>
-                        <option value="草津町">草津町</option>
-                        <option value="長野原町">長野原町</option>
-                        <option value="片品村">片品村</option>
-                        <option value="高山村">高山村</option>
-                        <option value="川場村">川場村</option>
-                        <option value="神流町">神流町</option>
-                        <option value="南牧村">南牧村</option>
-                        <option value="上野村">上野村</option>
-                        <option value="">-</option>
+                        <!-- JSで動的生成 -->
                     </select>
 
                     <select id="return-type">
@@ -204,6 +169,14 @@
                     <div class="preview-actions">
                         <button class="btn-icon" id="btn-copy-result" title="Copy">Copy</button>
                         <div class="overtime-group">
+                            <span class="overtime-label">休憩</span>
+                            <div class="overtime-badge" style="background: var(--ot-inactive-bg); color: #94a3b8;">
+                                <span class="ot-part copyable ot-copy-target" id="break-h" title="時間をコピー">0</span>
+                                <span class="ot-sep">:</span>
+                                <span class="ot-part copyable ot-copy-target" id="break-m" title="分をコピー">00</span>
+                            </div>
+                        </div>
+                        <div class="overtime-group">
                             <span class="overtime-label">実績</span>
                             <div class="overtime-badge">
                                 <span class="ot-part copyable ot-copy-target" id="ot-actual-h" title="時間をコピー">0</span>
@@ -222,8 +195,31 @@
                     </div>
                 </div>
 
+
+                <!-- 申請リマインダー -->
+                <div id="reminder-area" class="reminder-area"></div>
+
             </section>
         </main>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>完了場所設定</h2>
+                <button id="btn-close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">よく行く場所を選択してください（リストの上位に表示されます）</p>
+                <div id="location-settings-list" class="settings-grid">
+                    <!-- JSで生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-settings" class="btn-primary">保存して閉じる</button>
+            </div>
+        </div>
     </div>
 
     <script src="common.js"></script>

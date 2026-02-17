@@ -139,6 +139,14 @@ function calcOvertime() {
     updateBadge('ot-actual', otMinutes);
     // 申請表示（10分切り捨て）
     updateBadge('ot-round', roundedMin);
+
+    // 休憩時間計算
+    let breakMinutes = 0;
+    if (conn1 === '(休5)') breakMinutes += 5;
+    if (conn2 === '(休15)') breakMinutes += 15;
+
+    // 休憩表示更新
+    updateBadge('break', breakMinutes);
 }
 
 /** 残業バッジの表示を更新 (h/m 別々の span) */
@@ -312,6 +320,7 @@ function generateReport(e) {
     }
 
     calcOvertime();
+    updateReminders();
 }
 
 // --------------------------------------------------
@@ -347,13 +356,178 @@ function resetAll() {
     generateReport();
 }
 
+
+
 // --------------------------------------------------
-//  初期化
+//  申請リマインダー表示
 // --------------------------------------------------
+function updateReminders() {
+    const startType = val('start-type');
+    const endType = val('end-type');
+    const reminders = [];
+
+    // 1. 直行系 (始業)
+    if (startType === '(直行)' || startType === '(早出・直行)') {
+        reminders.push('当日の直行申請は済みましたか？');
+    }
+
+    // 2. 直帰 (終業)
+    if (endType === '(直帰)') {
+        reminders.push('直帰申請をしてください');
+    }
+
+    // 3. 車持 (終業)
+    if (endType === '(車持)') {
+        reminders.push('社用車持帰り申請をしてください');
+    }
+
+    // 4. 明日の直行確認 (直帰 or 車持 の場合)
+    if (endType === '(直帰)' || endType === '(車持)') {
+        reminders.push('明日直行する場合は、直行申請をしてください');
+    }
+
+    // 5. 残業予定時間申請 (固定表示 - 最上部)
+    const otH = document.getElementById('ot-round-h').textContent;
+    const otM = document.getElementById('ot-round-m').textContent;
+    const otMsg = `残業予定時間申請をしてください (申請時間 ${otH}:${otM})`;
+
+    const area = document.getElementById('reminder-area');
+
+    // 固定表示があるため常に表示
+    area.style.display = 'block';
+
+    let html = '';
+
+    // 特別なスタイルで最上部に表示
+    html += `<div class="reminder-priority">${otMsg}</div>`;
+
+    if (reminders.length > 0) {
+        html += `<ul class="reminder-list">
+            ${reminders.map(msg => `<li>${msg}</li>`).join('')}
+        </ul>`;
+    }
+
+    area.innerHTML = html;
+}
+
 // --------------------------------------------------
-//  初期化
+//  完了場所設定 (お気に入り機能)
 // --------------------------------------------------
+const ALL_LOCATIONS = [
+    '高崎市', '前橋市', '太田市', '伊勢崎市', '足利市', '桐生市', '館林市',
+    '渋川市', '藤岡市', '安中市', 'みどり市', '富岡市', '沼田市',
+    '大泉町', '玉村町', '邑楽町', '吉岡町', 'みなかみ町', '中之条町',
+    '榛東村', '板倉町', '甘楽町', '東吾妻町', '千代田町', '明和町',
+    '嬬恋村', '昭和村', '下仁田町', '草津町', '長野原町', '片品村',
+    '高山村', '川場村', '神流町', '南牧村', '上野村'
+];
+
+let favoriteLocations = [];
+
+const STORAGE_KEY_FAV = 'attendance_fav_locations';
+
+/** LocalStorageから読み込み */
+function loadFavorites() {
+    const json = localStorage.getItem(STORAGE_KEY_FAV);
+    if (json) {
+        favoriteLocations = JSON.parse(json);
+    } else {
+        favoriteLocations = [];
+    }
+}
+
+/** LocalStorageへ保存 */
+function saveFavorites() {
+    localStorage.setItem(STORAGE_KEY_FAV, JSON.stringify(favoriteLocations));
+}
+
+/** 場所プルダウンの再描画 */
+function renderLocationOptions() {
+    const select = document.getElementById('middle-type-2');
+    const currentVal = select.value; // 選択状態を維持するため
+
+    // お気に入りとその他に分離
+    const favs = ALL_LOCATIONS.filter(loc => favoriteLocations.includes(loc));
+    const others = ALL_LOCATIONS.filter(loc => !favoriteLocations.includes(loc));
+
+    let html = '';
+
+    // お気に入りグループ
+    if (favs.length > 0) {
+        favs.forEach(loc => {
+            html += `<option value="${loc}">★ ${loc}</option>`;
+        });
+        html += `<option disabled>──────────</option>`;
+    }
+
+    // その他グループ
+    others.forEach(loc => {
+        html += `<option value="${loc}">${loc}</option>`;
+    });
+
+    // 空選択肢 (末尾)
+    html += `<option value="">-</option>`;
+
+    select.innerHTML = html;
+
+    // 前回の選択値を復元（もしリストにあれば）
+    // なければデフォルト値 or 先頭
+    if (currentVal && (favs.includes(currentVal) || others.includes(currentVal))) {
+        select.value = currentVal;
+    } else {
+        // 初期値(高崎市)があればそれ、なければ先頭
+        if (favs.includes('高崎市') || others.includes('高崎市')) {
+            select.value = '高崎市';
+        } else {
+            select.selectedIndex = 0;
+        }
+    }
+}
+
+/** 設定モーダルの開閉 */
+function toggleSettingsModal(show) {
+    const modal = document.getElementById('settings-modal');
+    modal.style.display = show ? 'flex' : 'none';
+    if (show) {
+        renderSettingsCheckboxes();
+    }
+}
+
+/** 設定モーダル内のチェックボックス描画 */
+function renderSettingsCheckboxes() {
+    const container = document.getElementById('location-settings-list');
+    let html = '';
+    ALL_LOCATIONS.forEach(loc => {
+        const isFav = favoriteLocations.includes(loc);
+        html += `
+            <label class="setting-item">
+                <input type="checkbox" value="${loc}" ${isFav ? 'checked' : ''}>
+                <span>${loc}</span>
+            </label>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+/** 設定の保存 */
+function saveSettings() {
+    const checkboxes = document.querySelectorAll('#location-settings-list input[type="checkbox"]');
+    favoriteLocations = [];
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            favoriteLocations.push(cb.value);
+        }
+    });
+    saveFavorites();
+    renderLocationOptions();
+    toggleSettingsModal(false);
+}
+
+// 初期化時に読み込み
 window.addEventListener('DOMContentLoaded', () => {
+    loadFavorites();
+    renderLocationOptions();
+
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', (e) => {
@@ -417,6 +591,33 @@ window.addEventListener('DOMContentLoaded', () => {
     // テーマ変更時に色を再適用
     window.addEventListener('themechange', () => calcOvertime());
 
+    // 設定ボタン
+    const settingsBtn = document.getElementById('btn-settings');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => toggleSettingsModal(true));
+    }
+
+    // モーダル閉じる
+    const closeBtn = document.getElementById('btn-close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => toggleSettingsModal(false));
+    }
+
+    // 設定保存
+    const saveBtn = document.getElementById('btn-save-settings');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSettings);
+    }
+
+    // モーダル背景クリックで閉じる
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) toggleSettingsModal(false);
+        });
+    }
+
     generateReport();
     calcOvertime();
+    updateReminders();
 });
