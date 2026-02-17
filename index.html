@@ -42,6 +42,28 @@
                 <button class="btn-theme-toggle" title="完了場所設定" id="btn-settings">&#9881;</button>
                 <button class="btn-reset-corner" title="すべてリセット" id="btn-reset-all">&#x21ba;</button>
 
+                <div class="preset-toolbar">
+                    <div class="preset-dropdown" id="preset-dropdown">
+                        <button class="preset-trigger" id="dropdown-trigger">
+                            <span id="current-preset-name">履歴を選択...</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="preset-menu" id="dropdown-menu"></div>
+                    </div>
+                    <button class="btn-save-preset" id="btn-save-preset" title="現在の状態を保存 (上書き)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <span>保存</span>
+                    </button>
+                </div>
+
                 <!-- 8列グリッド: ラベル2段 + コントロール2段 -->
                 <div class="ctrl-grid">
 
@@ -201,6 +223,14 @@
                 <button id="btn-close-modal" class="btn-close">&times;</button>
             </div>
             <div class="modal-body">
+                <section class="settings-section">
+                    <h3>デフォルト設定</h3>
+                    <p class="modal-desc">現在の入力内容を初期値として保存します。</p>
+                    <button id="btn-save-default" class="btn-secondary"
+                        style="width:100%; margin-bottom:8px;">現在の状態をデフォルトに保存</button>
+                    <span id="msg-save-default" class="success-msg"></span>
+                </section>
+                <hr style="border:0; border-top:1px solid var(--glass-border); margin:16px 0;">
                 <p class="modal-desc">よく行く場所を選択してください（リストの上位に表示されます）</p>
                 <div id="location-settings-list" class="settings-grid">
                     <!-- JSで生成 -->

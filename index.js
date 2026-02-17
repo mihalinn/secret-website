@@ -9,7 +9,7 @@ const STANDARD_START = '09:00';
 const STANDARD_END = '17:45';
 const DEFAULT_RETURN = '16:00';
 
-const DEFAULTS = {
+let DEFAULTS = {
     'start-type': '(出社)',
     'start-time': STANDARD_START,
     'conn-1': '～',
@@ -23,6 +23,41 @@ const DEFAULTS = {
     'end-type': '(退社)',
     'end-time': STANDARD_END,
 };
+
+// --------------------------------------------------
+//  デフォルト設定 (LocalStorage)
+// --------------------------------------------------
+const STORAGE_KEY_DEFAULTS = 'attendance_defaults';
+
+function loadDefaults() {
+    const json = localStorage.getItem(STORAGE_KEY_DEFAULTS);
+    if (json) {
+        try {
+            const saved = JSON.parse(json);
+            DEFAULTS = { ...DEFAULTS, ...saved };
+        } catch (e) {
+            console.error('Defaults load error:', e);
+        }
+    }
+}
+
+function saveCurrentAsDefaults() {
+    const newDefaults = {};
+    for (const key of Object.keys(DEFAULTS)) {
+        const el = document.getElementById(key);
+        if (el) {
+            newDefaults[key] = el.value;
+        }
+    }
+    DEFAULTS = newDefaults;
+    localStorage.setItem(STORAGE_KEY_DEFAULTS, JSON.stringify(DEFAULTS));
+
+    const msg = document.getElementById('msg-save-default');
+    if (msg) {
+        msg.textContent = '保存しました';
+        setTimeout(() => msg.textContent = '', 2000);
+    }
+}
 
 // --------------------------------------------------
 //  ユーティリティ
@@ -523,10 +558,179 @@ function saveSettings() {
     toggleSettingsModal(false);
 }
 
+// --------------------------------------------------
+//  履歴 (Presets) 機能
+// --------------------------------------------------
+const STORAGE_KEY_PRESETS = 'attendance_presets_v2';
+let presets = [];
+
+/** 今日の日付文字列 (YYYY/MM/DD) */
+function getTodayString() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${dd}`;
+}
+
+/** 履歴の読み込み */
+function loadPresets() {
+    const json = localStorage.getItem(STORAGE_KEY_PRESETS);
+    if (json) {
+        try {
+            presets = JSON.parse(json);
+        } catch (e) {
+            presets = [];
+        }
+    }
+    renderPresetMenu();
+    updateCurrentPresetLabel(null);
+}
+
+/** 履歴の保存 (上書きモード) */
+function savePreset() {
+    const today = getTodayString();
+
+    // 現在の状態を取得
+    const currentData = {};
+    for (const key of Object.keys(DEFAULTS)) {
+        const el = document.getElementById(key);
+        if (el) currentData[key] = el.value;
+    }
+
+    // 既存の今日の日付のエントリを探す
+    const existingIndex = presets.findIndex(p => p.name === today);
+
+    if (existingIndex >= 0) {
+        // 上書き
+        presets[existingIndex].data = currentData;
+        presets[existingIndex].timestamp = Date.now();
+    } else {
+        // 新規作成
+        presets.unshift({
+            name: today,
+            data: currentData,
+            timestamp: Date.now()
+        });
+    }
+
+    // 最大件数制限 (例えば30件)
+    if (presets.length > 30) {
+        presets = presets.slice(0, 30);
+    }
+
+    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    renderPresetMenu();
+    updateCurrentPresetLabel(today);
+
+    // 保存完了フィードバック
+    const btn = document.getElementById('btn-save-preset');
+    const originalHTML = btn.innerHTML;
+    const span = btn.querySelector('span');
+    if (span) span.textContent = 'Saved!';
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+    }, 1000);
+}
+
+/** 履歴の削除 */
+function deletePreset(index, e) {
+    e.stopPropagation(); // ドロップダウンが閉じるのを防ぐ
+    if (!confirm('この履歴を削除しますか？')) return;
+
+    presets.splice(index, 1);
+    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    renderPresetMenu();
+    updateCurrentPresetLabel(null);
+}
+
+/** 履歴の適用 */
+function applyPreset(index) {
+    const preset = presets[index];
+    if (!preset) return;
+
+    for (const [key, val] of Object.entries(preset.data)) {
+        const el = document.getElementById(key);
+        if (el) el.value = val;
+    }
+    generateReport();
+    calcOvertime();
+    updateReminders();
+    updateCurrentPresetLabel(preset.name);
+
+    // ドロップダウンを閉じる
+    document.getElementById('preset-dropdown').classList.remove('active');
+    document.getElementById('dropdown-menu').classList.remove('show');
+}
+
+/** ドロップダウン描画 */
+function renderPresetMenu() {
+    const menu = document.getElementById('dropdown-menu');
+    if (!menu) return;
+
+    if (presets.length === 0) {
+        menu.innerHTML = '<div style="padding:8px; color:var(--text-secondary); font-size:0.85rem;">履歴はありません</div>';
+        return;
+    }
+
+    let html = '';
+    presets.forEach((p, index) => {
+        html += `
+            <div class="preset-item" onclick="applyPreset(${index})">
+                <span>${p.name}</span>
+                <button class="btn-delete-preset" onclick="deletePreset(${index}, event)" title="削除">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+        `;
+    });
+    menu.innerHTML = html;
+}
+
+/** 現在選択中のラベル更新 */
+function updateCurrentPresetLabel(name) {
+    const label = document.getElementById('current-preset-name');
+    if (label) {
+        label.textContent = name ? name : '履歴を選択...';
+    }
+}
+
+// Global scope for onclick handlers
+window.applyPreset = applyPreset;
+window.deletePreset = deletePreset;
+
+// ドロップダウン開閉制御
+function initPresetDropdown() {
+    const trigger = document.getElementById('dropdown-trigger');
+    const menu = document.getElementById('dropdown-menu');
+    const container = document.getElementById('preset-dropdown');
+
+    if (trigger && menu) {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('show');
+            container.classList.toggle('active');
+        });
+
+        // 外側クリックで閉じる
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                menu.classList.remove('show');
+                container.classList.remove('active');
+            }
+        });
+    }
+}
+
 // 初期化時に読み込み
 window.addEventListener('DOMContentLoaded', () => {
+    loadDefaults(); // デフォルト設定読み込み
     loadFavorites();
     renderLocationOptions();
+
+    // プリセット初期化
+    loadPresets();
+    initPresetDropdown();
 
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
@@ -607,6 +811,18 @@ window.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('btn-save-settings');
     if (saveBtn) {
         saveBtn.addEventListener('click', saveSettings);
+    }
+
+    // デフォルト保存ボタン
+    const saveDefaultBtn = document.getElementById('btn-save-default');
+    if (saveDefaultBtn) {
+        saveDefaultBtn.addEventListener('click', saveCurrentAsDefaults);
+    }
+
+    // 履歴保存ボタン
+    const savePresetBtn = document.getElementById('btn-save-preset');
+    if (savePresetBtn) {
+        savePresetBtn.addEventListener('click', savePreset);
     }
 
     // モーダル背景クリックで閉じる
