@@ -635,8 +635,9 @@ function savePreset() {
 
 /** 履歴の削除 */
 function deletePreset(index, e) {
-    e.stopPropagation(); // ドロップダウンが閉じるのを防ぐ
-    if (!confirm('この履歴を削除しますか？')) return;
+    if (e) e.stopPropagation();
+    // UI側で2段階確認しているので、ここはダイアログ不要
+    // if (!confirm('この履歴を削除しますか？')) return;
 
     presets.splice(index, 1);
     localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
@@ -676,10 +677,10 @@ function renderPresetMenu() {
     let html = '';
     presets.forEach((p, index) => {
         html += `
-            <div class="preset-item" onclick="applyPreset(${index})">
+            <div class="preset-item" data-index="${index}">
                 <span>${p.name}</span>
-                <button class="btn-delete-preset" onclick="deletePreset(${index}, event)" title="削除">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <button class="btn-delete-preset" type="button" data-index="${index}" title="削除">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
         `;
@@ -695,26 +696,63 @@ function updateCurrentPresetLabel(name) {
     }
 }
 
-// Global scope for onclick handlers
+// Global scope no longer needed but kept for safety if needed elsewhere
 window.applyPreset = applyPreset;
 window.deletePreset = deletePreset;
 
-// ドロップダウン開閉制御
+// ドロップダウン開閉制御 & イベント委譲
 function initPresetDropdown() {
     const trigger = document.getElementById('dropdown-trigger');
     const menu = document.getElementById('dropdown-menu');
     const container = document.getElementById('preset-dropdown');
 
     if (trigger && menu) {
+        // Toggle Open/Close
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
             menu.classList.toggle('show');
             container.classList.toggle('active');
         });
 
-        // 外側クリックで閉じる
+        // Event Delegation for Menu Items
+        menu.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.btn-delete-preset');
+            const item = e.target.closest('.preset-item');
+
+            if (deleteBtn) {
+                e.stopPropagation(); // Stop bubbling
+
+                // 2-step confirmation logic
+                if (deleteBtn.classList.contains('confirm')) {
+                    // Second click: Execute delete
+                    const index = parseInt(deleteBtn.getAttribute('data-index'), 10);
+                    deletePreset(index, e);
+                } else {
+                    // First click: Enter confirm state
+                    // Reset any other open confirms first
+                    document.querySelectorAll('.btn-delete-preset.confirm').forEach(btn => {
+                        btn.classList.remove('confirm');
+                    });
+
+                    deleteBtn.classList.add('confirm');
+
+                    // Auto-reset after 3 seconds
+                    setTimeout(() => {
+                        if (deleteBtn && document.body.contains(deleteBtn)) {
+                            deleteBtn.classList.remove('confirm');
+                        }
+                    }, 3000);
+                }
+            } else if (item) {
+                // Item Clicked
+                const index = parseInt(item.getAttribute('data-index'), 10);
+                applyPreset(index);
+            }
+        });
+
+        // Close when clicking outside
         document.addEventListener('click', (e) => {
-            if (!container.contains(e.target)) {
+            if (container && !container.contains(e.target)) {
                 menu.classList.remove('show');
                 container.classList.remove('active');
             }
