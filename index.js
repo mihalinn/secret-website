@@ -199,13 +199,15 @@ function generateReport(e) {
 
         // 残業発生時のみ (休15) を強制、それ以外は "-"
         if (isOvertime) {
-            if (conn2.value !== '(休15)') conn2.value = '(休15)';
+            if (conn2.value === '') conn2.value = '(休15)';
         } else {
             if (conn2.value !== '') conn2.value = '';
         }
 
-        // 終了内容は "-"
-        if (endContent.value !== '') endContent.value = '';
+        // 終了内容は "-" (帰着変更時のみクリア)
+        if (targetId === 'return-type') {
+            if (endContent.value !== '') endContent.value = '';
+        }
     } else {
         // 帰着ありなら、空になっている項目をデフォルトに戻す
         const conn2 = document.getElementById('conn-2');
