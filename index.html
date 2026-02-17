@@ -48,7 +48,7 @@
                     <span class="lbl main">始業</span>
                     <span class="lbl main"></span>
                     <span class="lbl main">業務</span>
-                    <span class="lbl main">業務2</span>
+                    <span class="lbl main">完了場所</span>
                     <span class="lbl main">帰着</span>
                     <span class="lbl main"></span>
                     <span class="lbl main">就業</span>
@@ -58,7 +58,7 @@
                     <span class="lbl sub">時刻設定</span>
                     <span class="lbl sub">接続</span>
                     <span class="lbl sub">件数</span>
-                    <span class="lbl sub">件数</span>
+                    <span class="lbl sub"></span>
                     <span class="lbl sub">時刻</span>
                     <span class="lbl sub">接続</span>
                     <span class="lbl sub">付帯</span>
@@ -69,50 +69,82 @@
                         <option value="(出社)">(出社)</option>
                         <option value="(早出)">(早出)</option>
                         <option value="(直行)">(直行)</option>
+                        <option value="(早出・直行)">(早出・直行)</option>
                     </select>
 
                     <select id="conn-1">
                         <option value="～">～</option>
                         <option value="(休5)">(休5)</option>
                         <option value="(継続)">(継続)</option>
-                        <option value="">(なし)</option>
                     </select>
 
                     <select id="middle-type">
                         <option value="外勤">外勤</option>
                         <option value="外勤同行">外勤同行</option>
-                        <option value="内勤">内勤</option>
+                        <option value="付帯業務">付帯業務</option>
                     </select>
 
                     <select id="middle-type-2">
-                        <option value="">(なし)</option>
-                        <option value="外勤">外勤</option>
-                        <option value="外勤同行">外勤同行</option>
-                        <option value="内勤">内勤</option>
+                        <option value="高崎市">高崎市</option>
+                        <option value="前橋市">前橋市</option>
+                        <option value="太田市">太田市</option>
+                        <option value="伊勢崎市">伊勢崎市</option>
+                        <option value="足利市">足利市</option>
+                        <option value="桐生市">桐生市</option>
+                        <option value="館林市">館林市</option>
+                        <option value="渋川市">渋川市</option>
+                        <option value="藤岡市">藤岡市</option>
+                        <option value="安中市">安中市</option>
+                        <option value="みどり市">みどり市</option>
+                        <option value="富岡市">富岡市</option>
+                        <option value="沼田市">沼田市</option>
+                        <option value="大泉町">大泉町</option>
+                        <option value="玉村町">玉村町</option>
+                        <option value="邑楽町">邑楽町</option>
+                        <option value="吉岡町">吉岡町</option>
+                        <option value="みなかみ町">みなかみ町</option>
+                        <option value="中之条町">中之条町</option>
+                        <option value="榛東村">榛東村</option>
+                        <option value="板倉町">板倉町</option>
+                        <option value="甘楽町">甘楽町</option>
+                        <option value="東吾妻町">東吾妻町</option>
+                        <option value="千代田町">千代田町</option>
+                        <option value="明和町">明和町</option>
+                        <option value="嬬恋村">嬬恋村</option>
+                        <option value="昭和村">昭和村</option>
+                        <option value="下仁田町">下仁田町</option>
+                        <option value="草津町">草津町</option>
+                        <option value="長野原町">長野原町</option>
+                        <option value="片品村">片品村</option>
+                        <option value="高山村">高山村</option>
+                        <option value="川場村">川場村</option>
+                        <option value="神流町">神流町</option>
+                        <option value="南牧村">南牧村</option>
+                        <option value="上野村">上野村</option>
+                        <option value="">-</option>
                     </select>
 
                     <select id="return-type">
                         <option value="(帰社)">(帰社)</option>
-                        <option value="">(なし)</option>
+                        <option value="">-</option>
                     </select>
 
                     <select id="conn-2">
                         <option value="(継続)">(継続)</option>
-                        <option value="～">～</option>
                         <option value="(休15)">(休15)</option>
-                        <option value="">(なし)</option>
+                        <option value="～">～</option>
+                        <option value="">-</option>
                     </select>
 
                     <select id="end-content">
                         <option value="付帯業務">付帯業務</option>
-                        <option value="事務処理">事務処理</option>
-                        <option value="会議">会議</option>
-                        <option value="">(なし)</option>
+                        <option value="">-</option>
                     </select>
 
                     <select id="end-type">
                         <option value="(退社)">(退社)</option>
                         <option value="(直帰)">(直帰)</option>
+                        <option value="(車持)">(車持)</option>
                     </select>
 
                     <!-- 行4: 時刻・件数コントロール -->
@@ -140,17 +172,7 @@
                         <option value="">-</option>
                     </select>
 
-                    <select id="visit-count-2">
-                        <option value="">-</option>
-                        <option value="1件">1件</option>
-                        <option value="2件">2件</option>
-                        <option value="3件">3件</option>
-                        <option value="4件">4件</option>
-                        <option value="5件">5件</option>
-                        <option value="6件">6件</option>
-                        <option value="7件">7件</option>
-                        <option value="8件">8件</option>
-                    </select>
+                    <div class="cell-empty"></div>
 
                     <div class="time-ctrl">
                         <button class="btn-fine btn-time-adj" data-target="return-time"

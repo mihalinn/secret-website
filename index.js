@@ -15,10 +15,9 @@ const DEFAULTS = {
     'conn-1': '～',
     'middle-type': '外勤',
     'visit-count': '1件',
-    'middle-type-2': '',
-    'visit-count-2': '',
+    'middle-type-2': '高崎市',
     'return-type': '(帰社)',
-    'return-time': DEFAULT_RETURN,
+    'return-time': '16:00',
     'conn-2': '(継続)',
     'end-content': '付帯業務',
     'end-type': '(退社)',
@@ -95,7 +94,7 @@ function updateConnectors() {
     const conn1 = document.getElementById('conn-1');
     const startTime = document.getElementById('start-time');
 
-    if (startType === '(早出)') {
+    if (startType === '(早出)' || startType === '(早出・直行)') {
         conn1.value = '(休5)';
         startTime.value = '08:30';
     } else {
@@ -168,39 +167,113 @@ function updateBadge(prefix, minutes) {
 // --------------------------------------------------
 //  レポート生成
 // --------------------------------------------------
-function generateReport() {
+function generateReport(e) {
+    const targetId = e ? e.target.id : null;
+
+    // --------------------------------------------------
+    //  依存関係の自動制御（UIへの反映）
+    // --------------------------------------------------
+    const midType = val('middle-type');
+
+    if (targetId === 'middle-type') {
+        const visitCount = document.getElementById('visit-count');
+        const midType2 = document.getElementById('middle-type-2');
+        if (midType === '付帯業務') {
+            if (visitCount.value !== '') visitCount.value = '';
+            if (midType2.value !== '') midType2.value = '';
+        } else {
+            // 付帯業務以外に戻った時、空ならデフォルト復帰
+            if (visitCount.value === '') visitCount.value = DEFAULTS['visit-count'];
+            if (midType2.value === '') midType2.value = DEFAULTS['middle-type-2'];
+        }
+    }
+
+    const retType = val('return-type');
+    const endMin = getMinutes(val('end-time'));
+    const stdEndMin = getMinutes(STANDARD_END); // 17:45
+    const isOvertime = endMin > stdEndMin;
+
+    if (retType === '') {
+        const conn2 = document.getElementById('conn-2');
+        const endContent = document.getElementById('end-content');
+
+        // 残業発生時のみ (休15) を強制、それ以外は "-"
+        if (isOvertime) {
+            if (conn2.value !== '(休15)') conn2.value = '(休15)';
+        } else {
+            if (conn2.value !== '') conn2.value = '';
+        }
+
+        // 終了内容は "-"
+        if (endContent.value !== '') endContent.value = '';
+    } else {
+        // 帰着ありなら、空になっている項目をデフォルトに戻す
+        const conn2 = document.getElementById('conn-2');
+        const endContent = document.getElementById('end-content');
+        if (conn2.value === '') conn2.value = DEFAULTS['conn-2'];
+        if (endContent.value === '') endContent.value = DEFAULTS['end-content'];
+    }
+
+    // --------------------------------------------------
+    //  結果組み立て（再取得）
+    // --------------------------------------------------
+    // UIを書き換えたので再取得が必要
     const startType = val('start-type');
     const startTime = formatTime(val('start-time'));
     const conn1 = val('conn-1');
+    const newMidType = val('middle-type'); // 付帯業務なら変わってないが念のため
 
-    const midType = val('middle-type');
+    // 業務内容の組み立て
+    let middle = '';
+    let middle2 = '';
+
+    // 付帯業務だろうと何だろうと、値が入っていればそのまま連結
+    // ユーザーの「例外」を許容するため
+    // newMidType は上部で定義済み
+    // const newMidType = val('middle-type'); 
     const midCount = val('visit-count');
-    const middle = midType + midCount;
+    middle = newMidType + midCount;
 
-    // 業務2（空でなければ追加）
     const midType2 = val('middle-type-2');
-    const midCount2 = val('visit-count-2');
-    const middle2 = midType2 ? ' ' + midType2 + midCount2 : '';
+    middle2 = midType2 ? ' ' + midType2 + '完了' : '';
 
-    const retType = val('return-type');
+    const newRetType = val('return-type');
     const retTime = formatTime(val('return-time'));
-    const retPart = retType ? retType + retTime : '';
+    const retPart = newRetType ? newRetType + retTime : '';
 
-    const conn2 = val('conn-2');
-    const endContent = val('end-content');
+    const newConn2 = val('conn-2');
+    const newEndContent = val('end-content');
     const endType = val('end-type');
     const endTime = formatTime(val('end-time'));
+    // 帰着なし（"-"）の場合の制御
+    // 残業有無にかかわらず、UI上の値をそのまま使う
+    // (休15) もしくは (継続) など、ユーザーが選択した内容を尊重
+    afterReturn = newConn2 + newEndContent + endType + endTime;
 
-    const result = `${startType}${startTime}${conn1}${middle}${middle2}${retPart}${conn2}${endContent}${endType}${endTime}`;
+    const result = `${startType}${startTime}${conn1}${middle}${middle2}${retPart}${afterReturn}`;
 
     document.getElementById('result-text').textContent = result;
 
-    // 早出なのに09:00以降の検証
+    calcOvertime();// 始業時刻の検証
     const startEl = document.getElementById('start-time');
     const startMin = getMinutes(val('start-time'));
     const stdStartMin = getMinutes(STANDARD_START);
 
-    if (val('start-type') === '(早出)' && startMin >= stdStartMin) {
+    const isEarly = val('start-type') === '(早出)' || val('start-type') === '(早出・直行)';
+    const isRegular = val('start-type') === '(出社)' || val('start-type') === '(直行)';
+
+    let hasStartError = false;
+
+    // 早出なのに09:00以降
+    if (isEarly && startMin >= stdStartMin) {
+        hasStartError = true;
+    }
+    // 通常（出社・直行）なのに09:00より前
+    else if (isRegular && startMin < stdStartMin) {
+        hasStartError = true;
+    }
+
+    if (hasStartError) {
         startEl.style.borderColor = '#f87171';
         startEl.style.boxShadow = '0 0 0 1px rgba(248,113,113,0.5)';
     } else {
@@ -211,7 +284,8 @@ function generateReport() {
     // 帰着時刻 > 就業時刻の検証
     const retEl = document.getElementById('return-time');
     const returnMin = getMinutes(val('return-time'));
-    const endMin = getMinutes(val('end-time'));
+    // endMin は上部で定義済みなので再利用
+    // const endMin = getMinutes(val('end-time')); 
 
     if (returnMin > endMin) {
         retEl.style.borderColor = '#f87171';
@@ -223,10 +297,11 @@ function generateReport() {
 
     // 就業時刻 < 17:45 の検証
     const endEl = document.getElementById('end-time');
-    const endMin2 = getMinutes(val('end-time'));
-    const stdEndMin = getMinutes(STANDARD_END);
+    // endMin, stdEndMin は上部で定義済み
+    // const endMinVal = getMinutes(val('end-time'));
+    // const stdEndMinVal = getMinutes(STANDARD_END);
 
-    if (endMin2 < stdEndMin) {
+    if (endMin < stdEndMin) {
         endEl.style.borderColor = '#f87171';
         endEl.style.boxShadow = '0 0 0 1px rgba(248,113,113,0.5)';
     } else {
@@ -273,11 +348,14 @@ function resetAll() {
 // --------------------------------------------------
 //  初期化
 // --------------------------------------------------
+// --------------------------------------------------
+//  初期化
+// --------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
-        el.addEventListener('input', () => {
-            generateReport();
+        el.addEventListener('input', (e) => {
+            generateReport(e);
             calcOvertime();
         });
     });
