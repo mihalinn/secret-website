@@ -224,9 +224,38 @@ window.startCompress = async function () {
 };
 
 /**
- * 画像の再圧縮（Canvas使用）
+ * 画像の再圧縮（Canvas / OffscreenCanvas使用）
  */
 async function recompressImage(bytes, quality, scale, width, height) {
+    // OffscreenCanvasが利用可能かチェック
+    const useOffscreen = typeof OffscreenCanvas !== 'undefined';
+
+    if (useOffscreen) {
+        try {
+            // OffscreenCanvasを使用（メインスレッドの負荷軽減）
+            const blob = new Blob([bytes], { type: 'image/jpeg' });
+            // createImageBitmap は Blob から直接ビットマップを作成可能
+            const bitmap = await createImageBitmap(blob);
+
+            const dw = Math.floor(width * scale);
+            const dh = Math.floor(height * scale);
+
+            const canvas = new OffscreenCanvas(dw, dh);
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(bitmap, 0, 0, dw, dh);
+            bitmap.close(); // Bitmapリソースの解放
+
+            const compressedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: quality });
+            return new Uint8Array(await compressedBlob.arrayBuffer());
+        } catch (e) {
+            console.warn("OffscreenCanvas failed, falling back to standard Canvas", e);
+            // 失敗時は標準Canvasへフォールバック
+        }
+    }
+
+    // 標準Canvas（フォールバック）
     return new Promise((resolve, reject) => {
         const blob = new Blob([bytes], { type: 'image/jpeg' });
         const url = URL.createObjectURL(blob);

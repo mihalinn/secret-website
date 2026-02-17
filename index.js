@@ -282,6 +282,49 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // 1. Start Type Change (Conn1/StartTime update)
+    const startTypeSelect = document.getElementById('start-type');
+    if (startTypeSelect) {
+        startTypeSelect.addEventListener('change', updateConnectors);
+    }
+
+    // 2. Time Adjustment Buttons
+    document.querySelectorAll('.btn-time-adj').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = btn.getAttribute('data-target');
+            const minutes = parseInt(btn.getAttribute('data-minutes'), 10);
+            if (targetId && !isNaN(minutes)) {
+                adjTime(targetId, minutes);
+            }
+        });
+    });
+
+    // 3. Copy Result Button
+    const copyBtn = document.getElementById('btn-copy-result');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', copyResult);
+    }
+
+    // 4. Overtime Copy Targets
+    document.querySelectorAll('.ot-copy-target').forEach(el => {
+        el.addEventListener('click', function () {
+            copyText(this);
+        });
+    });
+
+    // 5. Theme Toggle
+    const themeBtn = document.getElementById('theme-btn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
+
+    // 6. Reset Button
+    const resetBtn = document.getElementById('btn-reset-all');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetAll);
+    }
+
     // 時刻入力にマウスホイール対応（1分刻み）
     document.querySelectorAll('input[type="time"]').forEach(el => {
         el.addEventListener('wheel', (e) => {

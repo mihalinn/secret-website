@@ -3,10 +3,209 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=attendance.html">
-    <title>Redirecting...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勤怠詳細作成ツール</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="index.css">
 </head>
 
-<body></body>
+<body>
+    <div class="background-animation"></div>
+
+    <div class="container" id="main-content">
+
+        <!-- ヘッダー -->
+        <header class="header">
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link active">勤怠詳細</a>
+                <a href="pdfcompress.html" class="nav-link">PDF圧縮</a>
+            </nav>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Attendance Tool
+            </div>
+            <h1>Daily Report</h1>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="grid single-column wide-layout">
+            <section class="card glass form-card">
+                <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
+                <button class="btn-reset-corner" title="すべてリセット" id="btn-reset-all">&#x21ba;</button>
+
+                <!-- 8列グリッド: ラベル2段 + コントロール2段 -->
+                <div class="ctrl-grid">
+
+                    <!-- 行1: メインラベル -->
+                    <span class="lbl main">始業</span>
+                    <span class="lbl main"></span>
+                    <span class="lbl main">業務</span>
+                    <span class="lbl main">業務2</span>
+                    <span class="lbl main">帰着</span>
+                    <span class="lbl main"></span>
+                    <span class="lbl main">就業</span>
+                    <span class="lbl main"></span>
+
+                    <!-- 行2: サブラベル -->
+                    <span class="lbl sub">時刻設定</span>
+                    <span class="lbl sub">接続</span>
+                    <span class="lbl sub">件数</span>
+                    <span class="lbl sub">件数</span>
+                    <span class="lbl sub">時刻</span>
+                    <span class="lbl sub">接続</span>
+                    <span class="lbl sub">付帯</span>
+                    <span class="lbl sub">時刻</span>
+
+                    <!-- 行3: セレクト -->
+                    <select id="start-type">
+                        <option value="(出社)">(出社)</option>
+                        <option value="(早出)">(早出)</option>
+                        <option value="(直行)">(直行)</option>
+                    </select>
+
+                    <select id="conn-1">
+                        <option value="～">～</option>
+                        <option value="(休5)">(休5)</option>
+                        <option value="(継続)">(継続)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="middle-type">
+                        <option value="外勤">外勤</option>
+                        <option value="外勤同行">外勤同行</option>
+                        <option value="内勤">内勤</option>
+                    </select>
+
+                    <select id="middle-type-2">
+                        <option value="">(なし)</option>
+                        <option value="外勤">外勤</option>
+                        <option value="外勤同行">外勤同行</option>
+                        <option value="内勤">内勤</option>
+                    </select>
+
+                    <select id="return-type">
+                        <option value="(帰社)">(帰社)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="conn-2">
+                        <option value="(継続)">(継続)</option>
+                        <option value="～">～</option>
+                        <option value="(休15)">(休15)</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="end-content">
+                        <option value="付帯業務">付帯業務</option>
+                        <option value="事務処理">事務処理</option>
+                        <option value="会議">会議</option>
+                        <option value="">(なし)</option>
+                    </select>
+
+                    <select id="end-type">
+                        <option value="(退社)">(退社)</option>
+                        <option value="(直帰)">(直帰)</option>
+                    </select>
+
+                    <!-- 行4: 時刻・件数コントロール -->
+                    <div class="time-ctrl">
+                        <button class="btn-fine btn-time-adj" data-target="start-time"
+                            data-minutes="-1">&lsaquo;</button>
+                        <button class="btn-time-adj" data-target="start-time" data-minutes="-15">&minus;</button>
+                        <input type="time" id="start-time" value="09:00" step="60">
+                        <button class="btn-time-adj" data-target="start-time" data-minutes="15">+</button>
+                        <button class="btn-fine btn-time-adj" data-target="start-time"
+                            data-minutes="1">&rsaquo;</button>
+                    </div>
+
+                    <div class="cell-empty"></div>
+
+                    <select id="visit-count">
+                        <option value="1件">1件</option>
+                        <option value="2件">2件</option>
+                        <option value="3件">3件</option>
+                        <option value="4件">4件</option>
+                        <option value="5件">5件</option>
+                        <option value="6件">6件</option>
+                        <option value="7件">7件</option>
+                        <option value="8件">8件</option>
+                        <option value="">-</option>
+                    </select>
+
+                    <select id="visit-count-2">
+                        <option value="">-</option>
+                        <option value="1件">1件</option>
+                        <option value="2件">2件</option>
+                        <option value="3件">3件</option>
+                        <option value="4件">4件</option>
+                        <option value="5件">5件</option>
+                        <option value="6件">6件</option>
+                        <option value="7件">7件</option>
+                        <option value="8件">8件</option>
+                    </select>
+
+                    <div class="time-ctrl">
+                        <button class="btn-fine btn-time-adj" data-target="return-time"
+                            data-minutes="-1">&lsaquo;</button>
+                        <button class="btn-time-adj" data-target="return-time" data-minutes="-15">&minus;</button>
+                        <input type="time" id="return-time" value="16:00" step="60">
+                        <button class="btn-time-adj" data-target="return-time" data-minutes="15">+</button>
+                        <button class="btn-fine btn-time-adj" data-target="return-time"
+                            data-minutes="1">&rsaquo;</button>
+                    </div>
+
+                    <div class="cell-empty"></div>
+                    <div class="cell-empty"></div>
+
+                    <div class="time-ctrl">
+                        <button class="btn-fine btn-time-adj" data-target="end-time" data-minutes="-1">&lsaquo;</button>
+                        <button class="btn-time-adj" data-target="end-time" data-minutes="-15">&minus;</button>
+                        <input type="time" id="end-time" value="17:45" step="60">
+                        <button class="btn-time-adj" data-target="end-time" data-minutes="15">+</button>
+                        <button class="btn-fine btn-time-adj" data-target="end-time" data-minutes="1">&rsaquo;</button>
+                    </div>
+
+
+                </div>
+
+                <!-- 結果エリア -->
+                <div class="preview-area">
+                    <div class="result-box" id="result-text" contenteditable="true">...</div>
+                    <div class="preview-actions">
+                        <button class="btn-icon" id="btn-copy-result" title="Copy">Copy</button>
+                        <div class="overtime-group">
+                            <span class="overtime-label">実績</span>
+                            <div class="overtime-badge">
+                                <span class="ot-part copyable ot-copy-target" id="ot-actual-h" title="時間をコピー">0</span>
+                                <span class="ot-sep">:</span>
+                                <span class="ot-part copyable ot-copy-target" id="ot-actual-m" title="分をコピー">00</span>
+                            </div>
+                        </div>
+                        <div class="overtime-group">
+                            <span class="overtime-label">申請</span>
+                            <div class="overtime-badge">
+                                <span class="ot-part copyable ot-copy-target" id="ot-round-h" title="時間をコピー">0</span>
+                                <span class="ot-sep">:</span>
+                                <span class="ot-part copyable ot-copy-target" id="ot-round-m" title="分をコピー">00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="index.js"></script>
+</body>
 
 </html>

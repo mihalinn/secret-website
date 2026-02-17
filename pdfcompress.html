@@ -26,7 +26,7 @@
         <!-- ヘッダー -->
         <header class="header">
             <nav class="top-nav">
-                <a href="attendance.html" class="nav-link">勤怠詳細</a>
+                <a href="index.html" class="nav-link">勤怠詳細</a>
                 <a href="pdfcompress.html" class="nav-link active">PDF圧縮</a>
             </nav>
             <div class="status-badge">
@@ -177,6 +177,10 @@
     </div>
 
     <script src="common.js"></script>
+    <script type="module">
+        import * as mupdf from './mupdf.js';
+        window.mupdf = mupdf;
+    </script>
     <script src="pdfcompress.js"></script>
 </body>
 
