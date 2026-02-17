@@ -760,11 +760,24 @@ function initPresetDropdown() {
     }
 }
 
+
+/** デフォルト値をDOMに適用 */
+function applyDefaults() {
+    for (const [key, val] of Object.entries(DEFAULTS)) {
+        const el = document.getElementById(key);
+        if (el) {
+            // セレクトボックスで選択肢が存在しない場合は無視される（ブラウザ挙動）
+            el.value = val;
+        }
+    }
+}
+
 // 初期化時に読み込み
 window.addEventListener('DOMContentLoaded', () => {
-    loadDefaults(); // デフォルト設定読み込み
+    loadDefaults(); // デフォルト設定読み込み (変数への反映)
     loadFavorites();
     renderLocationOptions();
+    applyDefaults(); // 読み込んだデフォルト値をDOMに反映
 
     // プリセット初期化
     loadPresets();
