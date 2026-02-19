@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運行日報作成</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="driving_report.css">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="container" id="main-content">
+
+        <!-- ヘッダー -->
+        <header class="header">
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">勤怠詳細</a>
+                <a href="driving_report.html" class="nav-link active">運行日報</a>
+                <a href="pdfcompress.html" class="nav-link">PDF圧縮</a>
+            </nav>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Daily Driving Report
+            </div>
+            <h1>運行日報</h1>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="grid single-column wide-layout">
+            <section class="card glass form-card">
+                <div class="report-header">
+                    <div class="form-group-inline">
+                        <label>日付</label>
+                        <input type="date" id="report-date" class="input-date">
+                        <span id="report-day-of-week" class="day-label"></span>
+                    </div>
+                    <div class="form-group-inline">
+                        <label>運転者</label>
+                        <div class="select-with-btn">
+                            <select id="driver-name" class="input-text">
+                                <option value="">選択してください</option>
+                            </select>
+                            <button id="btn-edit-drivers" class="btn-icon-small" title="運転者リスト編集">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 1. 乗車前 (酒気帯び確認) -->
+                <div class="section-title">1. 乗車前 (酒気帯び確認)</div>
+                <div class="grid-2col">
+                    <div class="form-group">
+                        <label>確認時刻</label>
+                        <div class="time-input-group">
+                            <input type="time" id="pre-check-time">
+                            <button class="btn-now" data-target="pre-check-time">現在</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>確認方法</label>
+                        <select id="pre-check-method">
+                            <option value="対面">対面</option>
+                            <option value="電話">電話</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>確認相手</label>
+                        <div class="select-with-btn">
+                            <select id="pre-checker" class="input-text">
+                                <option value="">選択してください</option>
+                            </select>
+                            <button id="btn-edit-checkers" class="btn-icon-small" title="確認者リスト編集">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>酒気帯び</label>
+                        <div class="radio-group" id="pre-alcohol-group">
+                            <label><input type="radio" name="pre-alcohol" value="無" checked> 無</label>
+                            <label><input type="radio" name="pre-alcohol" value="有"> 有</label>
+                        </div>
+                        <input type="number" id="pre-alcohol-val" class="input-number" placeholder="数値" step="0.01"
+                            style="display:none; margin-top:4px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:1.5rem;">
+                    <label style="font-weight:600; color:var(--text-primary);">運行前点検</label>
+                    <div class="radio-group" id="pre-inspection-group" style="margin-top:0.5rem;">
+                        <label><input type="radio" name="pre-inspection" value="実施" checked> 実施</label>
+                        <label><input type="radio" name="pre-inspection" value="未実施"> 未実施</label>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 2. 運行記録 -->
+                <div class="section-title">2. 運行記録</div>
+
+                <div class="form-group">
+                    <label>訪問先・現場名等</label>
+                    <input type="text" id="destination" class="input-text-wide" placeholder="行き先を入力">
+                </div>
+
+                <div class="grid-2col">
+                    <!-- 出発 -->
+                    <div class="sub-section">
+                        <h4>出発 (乗車)</h4>
+                        <div class="form-group">
+                            <label>時刻</label>
+                            <div class="time-input-group">
+                                <input type="time" id="start-time">
+                                <button class="btn-now" data-target="start-time">現在</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>メーター</label>
+                            <input type="number" id="start-meter" class="input-meter" placeholder="km">
+                        </div>
+                    </div>
+
+                    <!-- 到着 -->
+                    <div class="sub-section">
+                        <h4>終了 (降車)</h4>
+                        <div class="form-group">
+                            <label>時刻</label>
+                            <div class="time-input-group">
+                                <input type="time" id="end-time">
+                                <button class="btn-now" data-target="end-time">現在</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>メーター</label>
+                            <input type="number" id="end-meter" class="input-meter" placeholder="km">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-box-simple">
+                    走行距離: <span id="calc-distance">0</span> km
+                </div>
+
+                <hr class="divider">
+
+                <!-- 3. 乗車後 (酒気帯び確認) -->
+                <div class="section-title">3. 乗車後 (酒気帯び確認)</div>
+                <div class="grid-2col">
+                    <div class="form-group">
+                        <label>確認時刻</label>
+                        <div class="time-input-group">
+                            <input type="time" id="post-check-time">
+                            <button class="btn-now" data-target="post-check-time">現在</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>確認方法</label>
+                        <select id="post-check-method">
+                            <option value="対面">対面</option>
+                            <option value="電話">電話</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>確認相手</label>
+                        <div class="select-with-btn">
+                            <select id="post-checker" class="input-text">
+                                <option value="">選択してください</option>
+                            </select>
+                            <!-- 設定ボタン共有 -->
+                            <button class="btn-icon-small" title="確認者リスト編集"
+                                onclick="document.getElementById('btn-edit-checkers').click()">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>酒気帯び</label>
+                        <div class="radio-group" id="post-alcohol-group">
+                            <label><input type="radio" name="post-alcohol" value="無" checked> 無</label>
+                            <label><input type="radio" name="post-alcohol" value="有"> 有</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 4. その他 -->
+                <div class="section-title">4. その他</div>
+
+                <div class="grid-2col">
+                    <div class="form-group">
+                        <label>給油</label>
+                        <div class="input-unit-group">
+                            <input type="number" id="refuel-amount" placeholder="0" step="0.1">
+                            <span class="unit">L</span>
+                        </div>
+                        <input type="number" id="refuel-meter" placeholder="給油時メーター" style="margin-top:4px;">
+                    </div>
+                    <div class="form-group">
+                        <label>車両持帰状況</label>
+                        <select id="vehicle-return">
+                            <option value="直行">直行</option>
+                            <option value="直帰">直帰</option>
+                            <option value="持帰り">持帰り</option>
+                            <option value="車両出社">車両出社</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label>特記事項</label>
+                    <textarea id="notes" rows="2" class="input-textarea" placeholder="備考があれば入力"></textarea>
+                </div>
+
+                <!-- 送信ボタンエリア -->
+                <div class="action-area">
+                    <div class="gas-url-group">
+                        <input type="password" id="gas-url" placeholder="GASのWebアプリURLを入力 (初回のみ)"
+                            title="Google Apps ScriptのデプロイURL">
+                        <button id="btn-save-url" class="btn-micro">URL保存</button>
+                    </div>
+                    <button id="btn-send-gas" class="btn-primary-large">
+                        <span class="icon">📤</span>
+                        日報を送信
+                    </button>
+                    <div id="status-msg" class="status-msg"></div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="driving_report.js"></script>
+</body>
+
+</html>
