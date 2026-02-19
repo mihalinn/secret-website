@@ -11,6 +11,7 @@ const DEFAULT_RETURN = '16:00';
 
 let DEFAULTS = {
     'start-type': '(出社)',
+    'start-forget': false,
     'start-time': STANDARD_START,
     'conn-1': '～',
     'middle-type': '外勤',
@@ -21,6 +22,7 @@ let DEFAULTS = {
     'conn-2': '(継続)',
     'end-content': '付帯業務',
     'end-type': '(退社)',
+    'end-forget': false,
     'end-time': STANDARD_END,
 };
 
@@ -46,7 +48,7 @@ function saveCurrentAsDefaults() {
     for (const key of Object.keys(DEFAULTS)) {
         const el = document.getElementById(key);
         if (el) {
-            newDefaults[key] = el.value;
+            newDefaults[key] = el.type === 'checkbox' ? el.checked : el.value;
         }
     }
     DEFAULTS = newDefaults;
@@ -282,6 +284,9 @@ function generateReport(e) {
     const midType2 = val('middle-type-2');
     middle2 = midType2 ? ' ' + midType2 + '完了' : '';
 
+    const startForget = document.getElementById('start-forget').checked;
+    const startTypeStr = startForget ? `(打忘・${startType.slice(1, -1)})` : startType;
+
     const newRetType = val('return-type');
     const retTime = formatTime(val('return-time'));
     const retPart = newRetType ? newRetType + retTime : '';
@@ -289,13 +294,13 @@ function generateReport(e) {
     const newConn2 = val('conn-2');
     const newEndContent = val('end-content');
     const endType = val('end-type');
+    const endForget = document.getElementById('end-forget').checked;
+    const endTypeStr = endForget ? `(打忘・${endType.slice(1, -1)})` : endType;
     const endTime = formatTime(val('end-time'));
-    // 帰着なし（"-"）の場合の制御
-    // 残業有無にかかわらず、UI上の値をそのまま使う
-    // (休15) もしくは (継続) など、ユーザーが選択した内容を尊重
-    afterReturn = newConn2 + newEndContent + endType + endTime;
 
-    const result = `${startType}${startTime}${conn1}${middle}${middle2}${retPart}${afterReturn}`;
+    afterReturn = newConn2 + newEndContent + endTypeStr + endTime;
+
+    const result = `${startTypeStr}${startTime}${conn1}${middle}${middle2}${retPart}${afterReturn}`;
 
     document.getElementById('result-text').textContent = result;
 
@@ -595,7 +600,7 @@ function savePreset() {
     const currentData = {};
     for (const key of Object.keys(DEFAULTS)) {
         const el = document.getElementById(key);
-        if (el) currentData[key] = el.value;
+        if (el) currentData[key] = el.type === 'checkbox' ? el.checked : el.value;
     }
 
     // 既存の今日の日付のエントリを探す
@@ -652,7 +657,10 @@ function applyPreset(index) {
 
     for (const [key, val] of Object.entries(preset.data)) {
         const el = document.getElementById(key);
-        if (el) el.value = val;
+        if (el) {
+            if (el.type === 'checkbox') el.checked = val;
+            else el.value = val;
+        }
     }
     generateReport();
     calcOvertime();
@@ -766,8 +774,8 @@ function applyDefaults() {
     for (const [key, val] of Object.entries(DEFAULTS)) {
         const el = document.getElementById(key);
         if (el) {
-            // セレクトボックスで選択肢が存在しない場合は無視される（ブラウザ挙動）
-            el.value = val;
+            if (el.type === 'checkbox') el.checked = val;
+            else el.value = val;
         }
     }
 }

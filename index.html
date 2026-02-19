@@ -68,20 +68,28 @@
                 <div class="ctrl-grid">
 
                     <!-- 行1: メインラベル -->
-                    <span class="lbl main">始業</span>
+                    <div class="lbl main forget-container">
+                        <span>始業</span>
+                        <label class="forget-label"><input type="checkbox" id="start-forget"> 打忘</label>
+                    </div>
                     <span class="lbl main"></span>
                     <span class="lbl main">業務</span>
                     <span class="lbl main">完了場所</span>
                     <span class="lbl main">帰着</span>
                     <span class="lbl main"></span>
-                    <span class="lbl main">就業</span>
-                    <span class="lbl main"></span>
+                    <span class="lbl main">業務</span>
+                    <div class="lbl main forget-container">
+                        <span>就業</span>
+                        <label class="forget-label"><input type="checkbox" id="end-forget"> 打忘</label>
+                    </div>
 
-                    <!-- 行3: セレクト -->
+
+                    <!-- 行2: セレクト -->
                     <select id="start-type">
                         <option value="(出社)">(出社)</option>
                         <option value="(早出)">(早出)</option>
                         <option value="(直行)">(直行)</option>
+                        <option value="(車両出社)">(車両出社)</option>
                         <option value="(早出・直行)">(早出・直行)</option>
                     </select>
 
