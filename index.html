@@ -62,6 +62,13 @@
                         </svg>
                         <span>保存</span>
                     </button>
+
+                    <div class="save-custom-area">
+                        <input type="date" id="save-date" class="save-date-input" title="保存する日付を指定">
+                        <button id="btn-save-custom" class="btn-secondary btn-save-custom" title="指定した日付で保存">
+                            <span>指定日保存</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 8列グリッド: ラベル2段 + コントロール2段 -->
@@ -246,6 +253,25 @@
             </div>
             <div class="modal-footer">
                 <button id="btn-save-settings" class="btn-primary">保存して閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 履歴一覧モーダル -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>保存履歴一覧</h2>
+                <button id="btn-close-history" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">保存済みの履歴データ一覧です。</p>
+                <div id="history-list" class="history-list-container">
+                    <!-- JSで生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-close-history-footer" class="btn-primary">閉じる</button>
             </div>
         </div>
     </div>

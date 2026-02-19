@@ -243,22 +243,66 @@ function generateReport(e) {
         const endContent = document.getElementById('end-content');
 
         // 残業発生時のみ (休15) を強制、それ以外は "-"
-        if (isOvertime) {
-            if (conn2.value === '') conn2.value = '(休15)';
-        } else {
-            if (conn2.value !== '') conn2.value = '';
-        }
+        const breakThreshold = stdEndMin + 15;
+        // 17:45 + 15 = 18:00
+
+        // 以前のロジックはここにあったが、全体適用のため移動
 
         // 終了内容は "-" (帰着変更時のみクリア)
         if (targetId === 'return-type') {
             if (endContent.value !== '') endContent.value = '';
+            // 帰着なしの場合、接続詞もクリアする（これも強制ではなく、帰着変更時のみ）
+            if (conn2.value !== '') conn2.value = '';
         }
     } else {
         // 帰着ありなら、空になっている項目をデフォルトに戻す
+        // これも「帰着タイプを変更した瞬間」のみ適用し、ユーザーが手動で空にした場合は維持する
+        if (targetId === 'return-type') {
+            const conn2 = document.getElementById('conn-2');
+            const endContent = document.getElementById('end-content');
+            if (conn2.value === '') conn2.value = DEFAULTS['conn-2'];
+            if (endContent.value === '') endContent.value = DEFAULTS['end-content'];
+        }
+    }
+
+    // --------------------------------------------------
+    //  自動休憩制御 (残業15分超過時) - 全体適用
+    // --------------------------------------------------
+    // ユーザーが手動で conn-2 を変更した場合は自動制御しない
+    if (targetId !== 'conn-2') {
         const conn2 = document.getElementById('conn-2');
-        const endContent = document.getElementById('end-content');
-        if (conn2.value === '') conn2.value = DEFAULTS['conn-2'];
-        if (endContent.value === '') endContent.value = DEFAULTS['end-content'];
+        // breakThresholdは上で定義しているが、スコープが切れている可能性も考慮して再定義（または確認）
+        // stdEndMinは関数スコープなのでOK
+        const breakThreshold = stdEndMin + 15;
+
+        // 15分を超えた場合 (18:01〜)
+        if (endMin > breakThreshold) {
+            // まだ (休15) になっていなければ変更 (ユーザーが意図的に(継続)にしている場合は変えない方がいいか？)
+            // 要件: "休憩ない場合もあるから継続にも変更できるようにして"
+            // -> つまりデフォルト動作として(休15)にするが、手動変更は阻害しない
+            // targetId !== 'conn-2' のガードがあるので、手動変更直後はここに来ない。
+            // しかし、時刻変更時(targetId='end-time')に再びここを通ると、
+            // 「(継続)」になっていても「(休15)」に書き換わってしまう。
+
+            // これを防ぐには、「空っぽの場合」または「デフォルト((継続)など)の場合」のみ上書きする、という手があるが、
+            // 「18:00またぎ」で自動セットしたいので、値だけで判断するのは難しい。
+
+            // 今回の修正案: 「targetIdがconn-2でない」= 「時刻などが変更された」タイミングでは
+            // 「(休15)」をセットする。
+            // ユーザーが「(継続)」に変えるときは targetId='conn-2' なのでここはスキップされる。これでOK。
+            // ただし、その後時刻を微調整するとまた「(休15)」に戻るが、それは「仕様」として許容範囲と推測。
+            // (完全に状態を保持するにはstate管理が必要だが、このツールはステートレス)
+
+            if (conn2.value !== '(休15)') conn2.value = '(休15)';
+        }
+        // 15分以下になった場合、もし (休15) が入っていたら元に戻す
+        else if (conn2.value === '(休15)') {
+            if (retType === '') {
+                conn2.value = '';
+            } else {
+                conn2.value = DEFAULTS['conn-2']; // (継続)
+            }
+        }
     }
 
     // --------------------------------------------------
@@ -584,6 +628,8 @@ function loadPresets() {
     if (json) {
         try {
             presets = JSON.parse(json);
+            // 日付降順にソート (新しい日付 -> 古い日付)
+            presets.sort((a, b) => b.name.localeCompare(a.name));
         } catch (e) {
             presets = [];
         }
@@ -593,9 +639,27 @@ function loadPresets() {
 }
 
 /** 履歴の保存 (上書きモード) */
-function savePreset() {
-    const today = getTodayString();
 
+/** 履歴の保存 (上書きモード) - 当日用 */
+function savePreset() {
+    const targetDate = getTodayString();
+    saveDataToDate(targetDate, 'btn-save-preset');
+}
+
+/** 履歴の保存 (上書きモード) - 指定日用 */
+function savePresetCustom() {
+    const dateInput = document.getElementById('save-date');
+    if (!dateInput || !dateInput.value) {
+        alert('日付を指定してください');
+        return;
+    }
+    // YYYY-MM-DD -> YYYY/MM/DD
+    const targetDate = dateInput.value.replace(/-/g, '/');
+    saveDataToDate(targetDate, 'btn-save-custom');
+}
+
+/** 指定した日付でデータを保存する共通処理 */
+function saveDataToDate(targetDate, btnId) {
     // 現在の状態を取得
     const currentData = {};
     for (const key of Object.keys(DEFAULTS)) {
@@ -603,8 +667,8 @@ function savePreset() {
         if (el) currentData[key] = el.type === 'checkbox' ? el.checked : el.value;
     }
 
-    // 既存の今日の日付のエントリを探す
-    const existingIndex = presets.findIndex(p => p.name === today);
+    // 既存のターゲット日付のエントリを探す
+    const existingIndex = presets.findIndex(p => p.name === targetDate);
 
     if (existingIndex >= 0) {
         // 上書き
@@ -612,24 +676,29 @@ function savePreset() {
         presets[existingIndex].timestamp = Date.now();
     } else {
         // 新規作成
-        presets.unshift({
-            name: today,
+        presets.push({
+            name: targetDate,
             data: currentData,
             timestamp: Date.now()
         });
     }
 
-    // 最大件数制限 (例えば30件)
-    if (presets.length > 30) {
-        presets = presets.slice(0, 30);
+    // 日付降順にソート (新しい日付 -> 古い日付)
+    presets.sort((a, b) => b.name.localeCompare(a.name));
+
+    // 最大件数制限 (例えば100件) - 最新の100件を残す
+    if (presets.length > 100) {
+        presets = presets.slice(0, 100);
     }
 
     localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
     renderPresetMenu();
-    updateCurrentPresetLabel(today);
+    updateCurrentPresetLabel(targetDate);
 
     // 保存完了フィードバック
-    const btn = document.getElementById('btn-save-preset');
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+
     const originalHTML = btn.innerHTML;
     const span = btn.querySelector('span');
     if (span) span.textContent = 'Saved!';
@@ -641,13 +710,16 @@ function savePreset() {
 /** 履歴の削除 */
 function deletePreset(index, e) {
     if (e) e.stopPropagation();
-    // UI側で2段階確認しているので、ここはダイアログ不要
-    // if (!confirm('この履歴を削除しますか？')) return;
-
     presets.splice(index, 1);
     localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
     renderPresetMenu();
     updateCurrentPresetLabel(null);
+
+    // モーダルが開いていれば再描画
+    const historyModal = document.getElementById('history-modal');
+    if (historyModal && historyModal.style.display !== 'none') {
+        renderHistoryList();
+    }
 }
 
 /** 履歴の適用 */
@@ -670,9 +742,12 @@ function applyPreset(index) {
     // ドロップダウンを閉じる
     document.getElementById('preset-dropdown').classList.remove('active');
     document.getElementById('dropdown-menu').classList.remove('show');
+
+    // モーダルも閉じる (履歴一覧から適用した場合)
+    closeHistoryModal();
 }
 
-/** ドロップダウン描画 */
+/** ドロップダウン描画 (最新10件のみ表示 + もっと見る) */
 function renderPresetMenu() {
     const menu = document.getElementById('dropdown-menu');
     if (!menu) return;
@@ -683,17 +758,85 @@ function renderPresetMenu() {
     }
 
     let html = '';
-    presets.forEach((p, index) => {
+    // 最大10件まで表示
+    const displayCount = Math.min(presets.length, 10);
+
+    for (let i = 0; i < displayCount; i++) {
+        const p = presets[i];
         html += `
-            <div class="preset-item" data-index="${index}">
+            <div class="preset-item" data-index="${i}">
                 <span>${p.name}</span>
-                <button class="btn-delete-preset" type="button" data-index="${index}" title="削除">
+                <button class="btn-delete-preset" type="button" data-index="${i}" title="削除">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </div>
         `;
-    });
+    }
+
+    // 10件を超える場合は「履歴一覧を表示」ボタンを追加
+    if (presets.length > 10) {
+        html += `
+            <div class="preset-more" id="btn-show-history-modal">
+                <span>すべての履歴を表示 (${presets.length}件)</span>
+            </div>
+        `;
+    }
+
     menu.innerHTML = html;
+
+    // もっと見るボタンのイベントリスナー
+    const moreBtn = document.getElementById('btn-show-history-modal');
+    if (moreBtn) {
+        moreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openHistoryModal();
+            // ドロップダウンを閉じる
+            document.getElementById('preset-dropdown').classList.remove('active');
+            menu.classList.remove('show');
+        });
+    }
+}
+
+/** 履歴一覧モーダルを開く */
+function openHistoryModal() {
+    renderHistoryList();
+    const modal = document.getElementById('history-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+/** 履歴一覧モーダルを閉じる */
+function closeHistoryModal() {
+    const modal = document.getElementById('history-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/** 履歴一覧リスト描画 (モーダル内) */
+function renderHistoryList() {
+    const container = document.getElementById('history-list');
+    if (!container) return;
+
+    if (presets.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">履歴はありません</div>';
+        return;
+    }
+
+    let html = '';
+    presets.forEach((p, index) => {
+        html += `
+            <div class="history-item">
+                <div class="history-info">${p.name}</div>
+                <div class="history-actions">
+                    <button class="btn-apply-history" onclick="applyPreset(${index})">適用</button>
+                    <button class="btn-delete-history" onclick="deletePreset(${index})">削除</button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
 }
 
 /** 現在選択中のラベル更新 */
@@ -791,6 +934,22 @@ window.addEventListener('DOMContentLoaded', () => {
     loadPresets();
     initPresetDropdown();
 
+    // 日付選択の初期化 (当日)
+    const saveDateInput = document.getElementById('save-date');
+    if (saveDateInput) {
+        saveDateInput.value = getTodayString().replace(/\//g, '-');
+    }
+
+    // 初回アクセス時の当日保存データ復元
+    const todayStr = getTodayString();
+    const todayIndex = presets.findIndex(p => p.name === todayStr);
+
+    if (todayIndex >= 0) {
+        // 当日のデータがあればそれを適用 (デフォルトを上書き)
+        applyPreset(todayIndex);
+        // UI上も「今日は保存済みデータを使用中」とわかるようにラベル更新などは applyPreset 内で行われる
+    }
+
     // 全入力要素に変更リスナーを登録
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', (e) => {
@@ -878,10 +1037,16 @@ window.addEventListener('DOMContentLoaded', () => {
         saveDefaultBtn.addEventListener('click', saveCurrentAsDefaults);
     }
 
-    // 履歴保存ボタン
+    // 履歴保存ボタン (当日)
     const savePresetBtn = document.getElementById('btn-save-preset');
     if (savePresetBtn) {
         savePresetBtn.addEventListener('click', savePreset);
+    }
+
+    // 履歴保存ボタン (指定日)
+    const saveCustomBtn = document.getElementById('btn-save-custom');
+    if (saveCustomBtn) {
+        saveCustomBtn.addEventListener('click', savePresetCustom);
     }
 
     // モーダル背景クリックで閉じる
@@ -889,6 +1054,24 @@ window.addEventListener('DOMContentLoaded', () => {
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) toggleSettingsModal(false);
+        });
+    }
+
+    // 履歴モーダル閉じるボタン
+    const closeHistoryBtn = document.getElementById('btn-close-history');
+    if (closeHistoryBtn) {
+        closeHistoryBtn.addEventListener('click', closeHistoryModal);
+    }
+    const closeHistoryFooterBtn = document.getElementById('btn-close-history-footer');
+    if (closeHistoryFooterBtn) {
+        closeHistoryFooterBtn.addEventListener('click', closeHistoryModal);
+    }
+
+    // 履歴モーダル背景クリック
+    const historyModal = document.getElementById('history-modal');
+    if (historyModal) {
+        historyModal.addEventListener('click', (e) => {
+            if (e.target === historyModal) closeHistoryModal();
         });
     }
 

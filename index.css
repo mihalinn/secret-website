@@ -763,3 +763,203 @@ select option {
     background: #ffffff;
     color: #334155;
 }
+
+/* Save Custom Area */
+.save-custom-area {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 4px;
+    /* Padding reduced for better alignment */
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    margin-left: 8px;
+    height: 42px;
+    /* Fixed height to match toolbar elements */
+    box-sizing: border-box;
+}
+
+.save-date-input {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 0 0.5rem;
+    /* Horizontal padding only */
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s;
+    color-scheme: dark;
+    height: 32px;
+    /* Slightly smaller than container */
+    line-height: 32px;
+}
+
+.save-date-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.btn-save-custom {
+    padding: 0 12px;
+    height: 32px;
+    /* Match input height */
+    font-size: 0.8rem;
+    white-space: nowrap;
+    border-radius: 6px;
+}
+
+[data-theme="light"] .save-date-input {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(203, 213, 225, 0.8);
+    color-scheme: light;
+}
+
+/* History Modal List */
+.history-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.history-info {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-apply-history {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-apply-history:hover {
+    background: rgba(56, 189, 248, 0.25);
+}
+
+.btn-delete-history {
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    color: #f87171;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete-history:hover {
+    background: rgba(248, 113, 113, 0.25);
+}
+
+/* Dropdown Positioning & Styling (Explicit) */
+.preset-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.preset-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 280px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+}
+
+.preset-menu.show {
+    display: flex;
+}
+
+.preset-item {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s;
+}
+
+.preset-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-delete-preset {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete-preset:hover {
+    background: rgba(248, 113, 113, 0.15);
+    color: #f87171;
+}
+
+.preset-more {
+    position: sticky;
+    bottom: 0;
+    background: var(--card-bg);
+    /* Match menu bg to cover scrolling content */
+    backdrop-filter: blur(12px);
+    padding: 10px 12px;
+    border-top: 1px solid var(--glass-border);
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: background 0.2s;
+    font-weight: 500;
+    z-index: 10;
+    /* Ensure it stays on top */
+}
+
+.preset-more:hover {
+    background: rgba(56, 189, 248, 0.15);
+}
