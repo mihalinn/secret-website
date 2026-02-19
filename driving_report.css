@@ -51,6 +51,66 @@
     border-radius: 2px;
 }
 
+/* Toolbar Actions */
+.form-card {
+    position: relative;
+    /* For absolute positioning of toolbar */
+}
+
+.toolbar-actions {
+    position: absolute;
+    top: 1rem;
+    right: 8rem;
+    /* Moved left to avoid overlap with theme/settings buttons */
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon-text {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-icon-text:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.btn-icon-text.primary {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+.btn-icon-text.primary:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.btn-icon-text .icon {
+    font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+    .toolbar-actions {
+        position: static;
+        width: 100%;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+        right: auto;
+        top: auto;
+    }
+}
+
 .grid-2col {
     display: grid;
     grid-template-columns: 1fr 1fr;

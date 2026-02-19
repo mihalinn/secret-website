@@ -42,6 +42,22 @@
                 <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
                 <button class="btn-theme-toggle" title="各種設定" id="btn-settings">&#9881;</button>
 
+                <!-- Toolbar (Reset / Temp Save) -->
+                <div class="toolbar-actions">
+                    <button id="btn-reset" class="btn-icon-text" title="入力内容をリセット">
+                        <span class="icon">🔄</span>
+                        <span class="label">リセット</span>
+                    </button>
+                    <button id="btn-temp-save" class="btn-icon-text primary" title="一時保存">
+                        <span class="icon">💾</span>
+                        <span class="label">一時保存</span>
+                    </button>
+                    <button id="btn-save-json" class="btn-icon-text" title="JSON形式で保存">
+                        <span class="icon">📥</span>
+                        <span class="label">JSON保存</span>
+                    </button>
+                </div>
+
                 <div class="report-header">
                     <div class="form-group-inline">
                         <label>日付</label>
@@ -324,6 +340,8 @@
                     <textarea id="notes" rows="2" class="input-textarea" placeholder="備考があれば入力"></textarea>
                 </div>
 
+                <!-- 送信ボタンエリア -->
+                <!-- 送信ボタンエリア -->
                 <!-- 送信ボタンエリア -->
                 <div class="action-area">
                     <button id="btn-send-gas" class="btn-primary-large">
