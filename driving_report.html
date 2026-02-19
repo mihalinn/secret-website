@@ -39,6 +39,9 @@
         <!-- メインコンテンツ -->
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
+                <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
+                <button class="btn-theme-toggle" title="各種設定" id="btn-settings">&#9881;</button>
+
                 <div class="report-header">
                     <div class="form-group-inline">
                         <label>日付</label>
@@ -51,7 +54,6 @@
                             <select id="driver-name" class="input-text">
                                 <option value="">選択してください</option>
                             </select>
-                            <button id="btn-edit-drivers" class="btn-icon-small" title="運転者リスト編集">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -78,12 +80,9 @@
                     </div>
                     <div class="form-group">
                         <label>確認相手</label>
-                        <div class="select-with-btn">
-                            <select id="pre-checker" class="input-text">
-                                <option value="">選択してください</option>
-                            </select>
-                            <button id="btn-edit-checkers" class="btn-icon-small" title="確認者リスト編集">⚙️</button>
-                        </div>
+                        <select id="pre-checker" class="input-text">
+                            <option value="">選択してください</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>酒気帯び</label>
@@ -109,47 +108,153 @@
                 <!-- 2. 運行記録 -->
                 <div class="section-title">2. 運行記録</div>
 
-                <div class="form-group">
-                    <label>訪問先・現場名等</label>
-                    <input type="text" id="destination" class="input-text-wide" placeholder="行き先を入力">
-                </div>
-
-                <div class="grid-2col">
-                    <!-- 出発 -->
-                    <div class="sub-section">
-                        <h4>出発 (乗車)</h4>
-                        <div class="form-group">
-                            <label>時刻</label>
-                            <div class="time-input-group">
-                                <input type="time" id="start-time">
-                                <button class="btn-now" data-target="start-time">現在</button>
+                <!-- Row 1 -->
+                <div class="sub-section" style="margin-bottom: 1rem;">
+                    <h4 style="color:var(--accent); border-color:var(--accent);">記録 1</h4>
+                    <div class="form-group">
+                        <label>訪問先・現場名等</label>
+                        <input type="text" id="destination-1" class="input-text-wide" placeholder="行き先を入力">
+                    </div>
+                    <div class="grid-2col">
+                        <!-- 出発 -->
+                        <div>
+                            <div class="form-group">
+                                <label>出発時刻</label>
+                                <div class="time-input-group">
+                                    <input type="time" id="start-time-1">
+                                    <button class="btn-now" data-target="start-time-1">現在</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>出発メーター</label>
+                                <input type="number" id="start-meter-1" class="input-meter" placeholder="km">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>メーター</label>
-                            <input type="number" id="start-meter" class="input-meter" placeholder="km">
-                        </div>
-                    </div>
-
-                    <!-- 到着 -->
-                    <div class="sub-section">
-                        <h4>終了 (降車)</h4>
-                        <div class="form-group">
-                            <label>時刻</label>
-                            <div class="time-input-group">
-                                <input type="time" id="end-time">
-                                <button class="btn-now" data-target="end-time">現在</button>
+                        <!-- 到着 -->
+                        <div>
+                            <div class="form-group">
+                                <label>到着時刻</label>
+                                <div class="time-input-group">
+                                    <input type="time" id="end-time-1">
+                                    <button class="btn-now" data-target="end-time-1">現在</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>到着メーター</label>
+                                <input type="number" id="end-meter-1" class="input-meter" placeholder="km">
                             </div>
                         </div>
+                    </div>
+                    <div class="result-box-simple" style="margin: 0.5rem 0; padding: 0.4rem; font-size: 0.9rem;">
+                        距離: <span id="calc-distance-1">0</span> km
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="sub-section" style="margin-bottom: 1rem;">
+                    <div class="row-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="color:var(--accent); border:none; margin:0;">記録 2</h4>
+                        <button class="btn-toggle-row" data-target="row-2-body"
+                            style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer;">
+                            &#9660; 開く
+                        </button>
+                    </div>
+                    <div id="row-2-body"
+                        style="display:none; margin-top:0.5rem; border-top:1px solid var(--glass-border); padding-top:0.5rem;">
                         <div class="form-group">
-                            <label>メーター</label>
-                            <input type="number" id="end-meter" class="input-meter" placeholder="km">
+                            <label>訪問先・現場名等</label>
+                            <input type="text" id="destination-2" class="input-text-wide" placeholder="行き先を入力">
+                        </div>
+                        <div class="grid-2col">
+                            <!-- 出発 -->
+                            <div>
+                                <div class="form-group">
+                                    <label>出発時刻</label>
+                                    <div class="time-input-group">
+                                        <input type="time" id="start-time-2">
+                                        <button class="btn-now" data-target="start-time-2">現在</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>出発メーター</label>
+                                    <input type="number" id="start-meter-2" class="input-meter" placeholder="km">
+                                </div>
+                            </div>
+                            <!-- 到着 -->
+                            <div>
+                                <div class="form-group">
+                                    <label>到着時刻</label>
+                                    <div class="time-input-group">
+                                        <input type="time" id="end-time-2">
+                                        <button class="btn-now" data-target="end-time-2">現在</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>到着メーター</label>
+                                    <input type="number" id="end-meter-2" class="input-meter" placeholder="km">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-box-simple" style="margin: 0.5rem 0; padding: 0.4rem; font-size: 0.9rem;">
+                            距離: <span id="calc-distance-2">0</span> km
                         </div>
                     </div>
                 </div>
 
-                <div class="result-box-simple">
-                    走行距離: <span id="calc-distance">0</span> km
+                <!-- Row 3 -->
+                <div class="sub-section">
+                    <div class="row-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="color:var(--accent); border:none; margin:0;">記録 3</h4>
+                        <button class="btn-toggle-row" data-target="row-3-body"
+                            style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer;">
+                            &#9660; 開く
+                        </button>
+                    </div>
+                    <div id="row-3-body"
+                        style="display:none; margin-top:0.5rem; border-top:1px solid var(--glass-border); padding-top:0.5rem;">
+                        <div class="form-group">
+                            <label>訪問先・現場名等</label>
+                            <input type="text" id="destination-3" class="input-text-wide" placeholder="行き先を入力">
+                        </div>
+                        <div class="grid-2col">
+                            <!-- 出発 -->
+                            <div>
+                                <div class="form-group">
+                                    <label>出発時刻</label>
+                                    <div class="time-input-group">
+                                        <input type="time" id="start-time-3">
+                                        <button class="btn-now" data-target="start-time-3">現在</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>出発メーター</label>
+                                    <input type="number" id="start-meter-3" class="input-meter" placeholder="km">
+                                </div>
+                            </div>
+                            <!-- 到着 -->
+                            <div>
+                                <div class="form-group">
+                                    <label>到着時刻</label>
+                                    <div class="time-input-group">
+                                        <input type="time" id="end-time-3">
+                                        <button class="btn-now" data-target="end-time-3">現在</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>到着メーター</label>
+                                    <input type="number" id="end-meter-3" class="input-meter" placeholder="km">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-box-simple" style="margin: 0.5rem 0; padding: 0.4rem; font-size: 0.9rem;">
+                            距離: <span id="calc-distance-3">0</span> km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="result-box-simple" style="margin-top: 1rem; font-weight: bold; font-size: 1.1rem;">
+                    走行距離合計: <span id="calc-distance-total">0</span> km
                 </div>
 
                 <hr class="divider">
@@ -174,14 +279,9 @@
                     </div>
                     <div class="form-group">
                         <label>確認相手</label>
-                        <div class="select-with-btn">
-                            <select id="post-checker" class="input-text">
-                                <option value="">選択してください</option>
-                            </select>
-                            <!-- 設定ボタン共有 -->
-                            <button class="btn-icon-small" title="確認者リスト編集"
-                                onclick="document.getElementById('btn-edit-checkers').click()">⚙️</button>
-                        </div>
+                        <select id="post-checker" class="input-text">
+                            <option value="">選択してください</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>酒気帯び</label>
@@ -209,6 +309,7 @@
                     <div class="form-group">
                         <label>車両持帰状況</label>
                         <select id="vehicle-return">
+                            <option value="">未選択</option>
                             <option value="直行">直行</option>
                             <option value="直帰">直帰</option>
                             <option value="持帰り">持帰り</option>
@@ -225,11 +326,6 @@
 
                 <!-- 送信ボタンエリア -->
                 <div class="action-area">
-                    <div class="gas-url-group">
-                        <input type="password" id="gas-url" placeholder="GASのWebアプリURLを入力 (初回のみ)"
-                            title="Google Apps ScriptのデプロイURL">
-                        <button id="btn-save-url" class="btn-micro">URL保存</button>
-                    </div>
                     <button id="btn-send-gas" class="btn-primary-large">
                         <span class="icon">📤</span>
                         日報を送信
@@ -239,6 +335,59 @@
 
             </section>
         </main>
+    </div>
+
+    <!-- 設定モーダル (ひとまとめ) -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>各種設定</h2>
+                <button id="btn-close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- タブ切り替え風 -->
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="driver">運転者リスト</button>
+                    <button class="tab-btn" data-tab="checker">確認者リスト</button>
+                    <button class="tab-btn" data-tab="system">システム</button>
+                </div>
+
+                <!-- 運転者設定 -->
+                <div id="tab-driver" class="tab-content active">
+                    <p class="modal-desc">運転者名簿の編集</p>
+                    <div id="driver-list-container" class="list-edit-container"></div>
+                    <div class="add-item-row">
+                        <input type="text" id="input-add-driver" class="input-add-item" placeholder="運転者を追加">
+                        <button class="btn-add-item" id="btn-add-driver">追加</button>
+                    </div>
+                </div>
+
+                <!-- 確認者設定 -->
+                <div id="tab-checker" class="tab-content">
+                    <p class="modal-desc">アルコールチェック確認者の編集</p>
+                    <div id="checker-list-container" class="list-edit-container"></div>
+                    <div class="add-item-row">
+                        <input type="text" id="input-add-checker" class="input-add-item" placeholder="確認者を追加">
+                        <button class="btn-add-item" id="btn-add-checker">追加</button>
+                    </div>
+                </div>
+
+                <!-- システム設定 -->
+                <div id="tab-system" class="tab-content">
+                    <p class="modal-desc">Google Apps Script連携設定</p>
+                    <div class="form-group">
+                        <label>Webアプリ URL</label>
+                        <input type="password" id="gas-url-input" class="input-text"
+                            placeholder="https://script.google.com/..." style="width:100%">
+                    </div>
+                    <p class="modal-desc" style="font-size:0.8rem; margin-top:0.5rem;">
+                        ※ 入力すると自動保存されます。
+                    </p>
+                </div>
+
+            </div>
+        </div>
     </div>
 
     <script src="common.js"></script>

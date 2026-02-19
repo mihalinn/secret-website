@@ -1,5 +1,6 @@
 
 const GAS_URL_KEY = 'driving_report_gas_url';
+const THEME_KEY = 'attendance_theme';
 const DRIVER_LIST_KEY = 'driving_report_driver_list';
 const CHECKER_LIST_KEY = 'driving_report_checker_list';
 const LAST_DRIVER_KEY = 'driving_report_last_driver';
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDate();
     loadSettings();
     initDropdowns(); // Load lists
+    initTheme(); // Initialize Theme
     setupEventListeners();
 });
 
@@ -44,10 +46,12 @@ function updateDayOfWeek() {
 }
 
 function loadSettings() {
-    // Load GAS URL
+    // Optional: Load URL into the modal input immediately? 
+    // Not strictly necessary if openSettingsModal does it, but good for sendReport if it reads DOM
     const savedUrl = localStorage.getItem(GAS_URL_KEY);
     if (savedUrl) {
-        document.getElementById('gas-url').value = savedUrl;
+        const input = document.getElementById('gas-url-input');
+        if (input) input.value = savedUrl;
     }
 }
 
@@ -97,32 +101,192 @@ function updateDropdownOptions(storageKey, elementIds, defaultList) {
     });
 }
 
-function editList(storageKey, elementIds, title) {
-    let listStr = localStorage.getItem(storageKey);
-    let list = listStr ? JSON.parse(listStr) : [];
-
-    const input = prompt(`${title}を設定します。\n名前をカンマ(,)区切りで入力してください。`, list.join(','));
-
-    if (input !== null) {
-        // Split, trim, filter empty
-        const newList = input.split(',').map(s => s.trim()).filter(s => s);
-        localStorage.setItem(storageKey, JSON.stringify(newList));
-        updateDropdownOptions(storageKey, elementIds, newList);
+// ------------------------------------------------------------------
+// Theme Handling
+// ------------------------------------------------------------------
+function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        updateThemeIcon(true);
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        updateThemeIcon(false);
     }
 }
 
+function toggleTheme() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'dark');
+        updateThemeIcon(false);
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem(THEME_KEY, 'light');
+        updateThemeIcon(true);
+    }
+}
+
+function updateThemeIcon(isLight) {
+    const btn = document.getElementById('theme-btn');
+    if (btn) {
+        // Light Mode -> Show Moon (to switch to Dark)
+        // Dark Mode  -> Show Sun  (to switch to Light)
+        btn.innerHTML = isLight ? '&#9790;' : '&#9728;';
+    }
+}
+
+// ------------------------------------------------------------------
+// Unified Settings Modal
+// ------------------------------------------------------------------
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.style.display = 'flex';
+
+    // Default tab
+    switchTab('driver');
+    renderDriverList();
+    renderCheckerList();
+
+    // Load GAS URL
+    const savedUrl = localStorage.getItem(GAS_URL_KEY);
+    if (savedUrl) {
+        document.getElementById('gas-url-input').value = savedUrl;
+    }
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal').style.display = 'none';
+    // Init Dropdowns again to reflect changes
+    initDropdowns();
+}
+
+function switchTab(tabName) {
+    // Buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.id === `tab-${tabName}`) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
+}
+
+// ---- Render Lists ----
+function renderDriverList() {
+    renderListGeneric(DRIVER_LIST_KEY, 'driver-list-container', (idx) => deleteItem(DRIVER_LIST_KEY, idx, renderDriverList));
+}
+
+function renderCheckerList() {
+    renderListGeneric(CHECKER_LIST_KEY, 'checker-list-container', (idx) => deleteItem(CHECKER_LIST_KEY, idx, renderCheckerList));
+}
+
+function renderListGeneric(storageKey, containerId, onDelete) {
+    const listStr = localStorage.getItem(storageKey);
+    const list = listStr ? JSON.parse(listStr) : [];
+
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    list.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `
+            <span>${item}</span>
+            <button class="btn-delete-item" title="削除">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+        `;
+
+        // Bind click
+        div.querySelector('.btn-delete-item').addEventListener('click', () => onDelete(index));
+        container.appendChild(div);
+    });
+}
+
+// ---- Add/Delete Logic ----
+function addItem(storageKey, inputId, renderFunc) {
+    const input = document.getElementById(inputId);
+    const val = input.value.trim();
+    if (!val) return;
+
+    let listStr = localStorage.getItem(storageKey);
+    let list = listStr ? JSON.parse(listStr) : [];
+
+    if (list.includes(val)) {
+        alert('すでに登録されています');
+        return;
+    }
+
+    list.push(val);
+    localStorage.setItem(storageKey, JSON.stringify(list));
+    renderFunc();
+    input.value = '';
+}
+
+function deleteItem(storageKey, index, renderFunc) {
+    if (!confirm('削除しますか？')) return;
+
+    let listStr = localStorage.getItem(storageKey);
+    let list = listStr ? JSON.parse(listStr) : [];
+
+    list.splice(index, 1);
+    localStorage.setItem(storageKey, JSON.stringify(list));
+    renderFunc();
+}
+
+// ------------------------------------------------------------------
+// Event Listeners
+// ------------------------------------------------------------------
 function setupEventListeners() {
     // Date change -> update day of week
     document.getElementById('report-date').addEventListener('change', updateDayOfWeek);
 
-    // Edit Drivers
-    document.getElementById('btn-edit-drivers').addEventListener('click', () => {
-        editList(DRIVER_LIST_KEY, ['driver-name'], '運転者リスト');
+    // Theme Toggle
+    const themeBtn = document.getElementById('theme-btn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
+
+    // Main Settings Button
+    document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
+
+    // Modal Close
+    document.getElementById('btn-close-modal').addEventListener('click', closeSettingsModal);
+    document.getElementById('settings-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'settings-modal') closeSettingsModal();
     });
 
-    // Edit Checkers
-    document.getElementById('btn-edit-checkers').addEventListener('click', () => {
-        editList(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], '確認者リスト');
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTab(btn.getAttribute('data-tab'));
+        });
+    });
+
+    // Driver Add
+    document.getElementById('btn-add-driver').addEventListener('click', () => {
+        addItem(DRIVER_LIST_KEY, 'input-add-driver', renderDriverList);
+    });
+
+    // Checker Add
+    document.getElementById('btn-add-checker').addEventListener('click', () => {
+        addItem(CHECKER_LIST_KEY, 'input-add-checker', renderCheckerList);
+    });
+
+    // GAS URL Auto Save
+    document.getElementById('gas-url-input').addEventListener('input', (e) => {
+        localStorage.setItem(GAS_URL_KEY, e.target.value);
     });
 
     // Save selection on change
@@ -150,23 +314,43 @@ function setupEventListeners() {
         });
     });
 
-    // Distance Calculation
-    const startMeter = document.getElementById('start-meter');
-    const endMeter = document.getElementById('end-meter');
-    const calcLabel = document.getElementById('calc-distance');
+    // Row Toggle Buttons
+    document.querySelectorAll('.btn-toggle-row').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
+            const target = document.getElementById(targetId);
+            if (target) {
+                if (target.style.display === 'none') {
+                    target.style.display = 'block';
+                    btn.innerHTML = '&#9650; 閉じる';
+                } else {
+                    target.style.display = 'none';
+                    btn.innerHTML = '&#9660; 開く';
+                }
+            }
+        });
+    });
 
+    // Distance Calculation
+    // IDs: start-meter-1..3, end-meter-1..3, calc-distance-1..3, calc-distance-total
     function calcDistance() {
-        const start = parseFloat(startMeter.value) || 0;
-        const end = parseFloat(endMeter.value) || 0;
-        if (end > start) {
-            calcLabel.textContent = (end - start).toFixed(1);
-        } else {
-            calcLabel.textContent = '0';
+        let total = 0;
+        for (let i = 1; i <= 3; i++) {
+            const start = parseFloat(document.getElementById(`start-meter-${i}`).value) || 0;
+            const end = parseFloat(document.getElementById(`end-meter-${i}`).value) || 0;
+            const dist = (end > start) ? (end - start) : 0;
+
+            document.getElementById(`calc-distance-${i}`).textContent = dist.toFixed(1);
+            total += dist;
         }
+        document.getElementById('calc-distance-total').textContent = total.toFixed(1);
     }
 
-    startMeter.addEventListener('input', calcDistance);
-    endMeter.addEventListener('input', calcDistance);
+    // Bind listeners for 1..3
+    for (let i = 1; i <= 3; i++) {
+        document.getElementById(`start-meter-${i}`).addEventListener('input', calcDistance);
+        document.getElementById(`end-meter-${i}`).addEventListener('input', calcDistance);
+    }
 
     // Alcohol Check Visibility
     document.querySelectorAll('input[name="pre-alcohol"]').forEach(radio => {
@@ -181,25 +365,17 @@ function setupEventListeners() {
         });
     });
 
-    // Save URL Button
-    document.getElementById('btn-save-url').addEventListener('click', () => {
-        const url = document.getElementById('gas-url').value;
-        if (url) {
-            localStorage.setItem(GAS_URL_KEY, url);
-            alert('URLを保存しました');
-        }
-    });
-
     // Send Button
     document.getElementById('btn-send-gas').addEventListener('click', sendReport);
 }
 
 async function sendReport() {
-    const url = document.getElementById('gas-url').value;
+    // Read from the new input in modal
+    const url = document.getElementById('gas-url-input').value;
     const statusMsg = document.getElementById('status-msg');
 
     if (!url) {
-        statusMsg.textContent = 'GASのURLが設定されていません';
+        statusMsg.textContent = 'GASのURLが設定されていません (設定メニューから入力してください)';
         statusMsg.className = 'status-msg status-error';
         return;
     }
@@ -217,12 +393,30 @@ async function sendReport() {
         preAlcoholVal: document.getElementById('pre-alcohol-val').value,
 
         // 2. Drive Info
-        destination: document.getElementById('destination').value,
-        startTime: document.getElementById('start-time').value,
-        startMeter: document.getElementById('start-meter').value,
-        endTime: document.getElementById('end-time').value,
-        endMeter: document.getElementById('end-meter').value,
-        distance: document.getElementById('calc-distance').textContent,
+        // 2. Drive Info (3 Rows)
+        // We will flatten these fields for GAS convenience
+        destination1: document.getElementById('destination-1').value,
+        startTime1: document.getElementById('start-time-1').value,
+        startMeter1: document.getElementById('start-meter-1').value,
+        endTime1: document.getElementById('end-time-1').value,
+        endMeter1: document.getElementById('end-meter-1').value,
+        distance1: document.getElementById('calc-distance-1').textContent,
+
+        destination2: document.getElementById('destination-2').value,
+        startTime2: document.getElementById('start-time-2').value,
+        startMeter2: document.getElementById('start-meter-2').value,
+        endTime2: document.getElementById('end-time-2').value,
+        endMeter2: document.getElementById('end-meter-2').value,
+        distance2: document.getElementById('calc-distance-2').textContent,
+
+        destination3: document.getElementById('destination-3').value,
+        startTime3: document.getElementById('start-time-3').value,
+        startMeter3: document.getElementById('start-meter-3').value,
+        endTime3: document.getElementById('end-time-3').value,
+        endMeter3: document.getElementById('end-meter-3').value,
+        distance3: document.getElementById('calc-distance-3').textContent,
+
+        totalDistance: document.getElementById('calc-distance-total').textContent,
 
         // 3. Others (Move inspection to Pre-check in logic if needed, but here simple JSON)
         preInspection: document.querySelector('input[name="pre-inspection"]:checked')?.value || '',
