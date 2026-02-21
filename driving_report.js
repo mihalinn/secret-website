@@ -1,14 +1,18 @@
 const GAS_URL_KEY = 'driving_report_gas_url';
 const THEME_KEY = 'attendance_theme';
 const DRIVER_LIST_KEY = 'driving_report_driver_list';
+const VEHICLE_LIST_KEY = 'driving_report_vehicle_list';
 const CHECKER_LIST_KEY = 'driving_report_checker_list';
 const LAST_DRIVER_KEY = 'driving_report_last_driver';
+const LAST_VEHICLE_KEY = 'driving_report_last_vehicle';
 const LAST_CHECKER_PRE_KEY = 'driving_report_last_checker_pre';
 const LAST_CHECKER_POST_KEY = 'driving_report_last_checker_post';
 const HISTORY_KEY = 'driving_report_history';
+const PASSCODE_KEY = 'driving_report_passcode';
 
-const DEFAULT_DRIVERS = ['運転者A', '運転者B'];
-const DEFAULT_CHECKERS = ['管理者A', '管理者B'];
+const DEFAULT_DRIVERS = ['(設定から名前を追加してください)'];
+const DEFAULT_VEHICLES = ['(設定から車両名を追加してください)'];
+const DEFAULT_CHECKERS = ['(設定から確認者名を追加してください)'];
 
 document.addEventListener('DOMContentLoaded', () => {
     initDate();
@@ -58,13 +62,37 @@ function loadSettings() {
         const input = document.getElementById('gas-url-input');
         if (input) input.value = savedUrl;
     }
+    const savedPass = localStorage.getItem(PASSCODE_KEY);
+    if (savedPass) {
+        const input = document.getElementById('sys-passcode-input');
+        if (input) input.value = savedPass;
+    }
 }
 
 function initDropdowns() {
-    // Drivers
-    updateDropdownOptions(DRIVER_LIST_KEY, ['driver-name'], DEFAULT_DRIVERS);
+    // Drivers (for 3 rows)
+    updateDropdownOptions(DRIVER_LIST_KEY, ['driver-name-1', 'driver-name-2', 'driver-name-3'], DEFAULT_DRIVERS);
     const lastDriver = localStorage.getItem(LAST_DRIVER_KEY);
-    if (lastDriver) document.getElementById('driver-name').value = lastDriver;
+    if (lastDriver) {
+        document.getElementById('driver-name-1').value = lastDriver;
+    }
+
+    // Vehicles
+    updateDropdownOptions(VEHICLE_LIST_KEY, ['vehicle-id'], DEFAULT_VEHICLES);
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlVehicle = urlParams.get('vehicle');
+
+    if (urlVehicle) {
+        // If passed via URL (QR Code), prioritize it and save as last used
+        document.getElementById('vehicle-id').value = urlVehicle;
+        localStorage.setItem(LAST_VEHICLE_KEY, urlVehicle);
+    } else {
+        // Fallback to local storage
+        const lastVehicle = localStorage.getItem(LAST_VEHICLE_KEY);
+        if (lastVehicle) {
+            document.getElementById('vehicle-id').value = lastVehicle;
+        }
+    }
 
     // Checkers (Pre & Post)
     updateDropdownOptions(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], DEFAULT_CHECKERS);
@@ -80,8 +108,15 @@ function updateDropdownOptions(storageKey, elementIds, defaultList) {
     let listStr = localStorage.getItem(storageKey);
     let list = [];
     if (listStr) {
-        list = JSON.parse(listStr);
-    } else {
+        try {
+            list = JSON.parse(listStr);
+        } catch (e) {
+            console.error('JSON parse error', e);
+        }
+    }
+
+    // If list is null, undefined, or empty, fallback to defaults
+    if (!list || list.length === 0) {
         list = defaultList;
         localStorage.setItem(storageKey, JSON.stringify(list));
     }
@@ -153,11 +188,16 @@ function openSettingsModal() {
     switchTab('driver');
     renderDriverList();
     renderCheckerList();
+    renderVehicleList();
 
-    // Load GAS URL
+    // Load GAS URL and Passcode
     const savedUrl = localStorage.getItem(GAS_URL_KEY);
     if (savedUrl) {
         document.getElementById('gas-url-input').value = savedUrl;
+    }
+    const savedPass = localStorage.getItem(PASSCODE_KEY);
+    if (savedPass) {
+        document.getElementById('sys-passcode-input').value = savedPass;
     }
 }
 
@@ -196,6 +236,10 @@ function renderCheckerList() {
     renderListGeneric(CHECKER_LIST_KEY, 'checker-list-container', (idx) => deleteItem(CHECKER_LIST_KEY, idx, renderCheckerList));
 }
 
+function renderVehicleList() {
+    renderListGeneric(VEHICLE_LIST_KEY, 'vehicle-list-container', (idx) => deleteItem(VEHICLE_LIST_KEY, idx, renderVehicleList));
+}
+
 function renderListGeneric(storageKey, containerId, onDelete) {
     const listStr = localStorage.getItem(storageKey);
     const list = listStr ? JSON.parse(listStr) : [];
@@ -206,17 +250,153 @@ function renderListGeneric(storageKey, containerId, onDelete) {
     list.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        div.innerHTML = `
-            <span>${item}</span>
-            <button class="btn-delete-item" title="削除">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-        `;
 
-        // Bind click
-        div.querySelector('.btn-delete-item').addEventListener('click', () => onDelete(index));
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = item;
+        div.appendChild(nameSpan);
+
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '4px';
+
+        if (storageKey === VEHICLE_LIST_KEY) {
+            const qrBtn = document.createElement('button');
+            qrBtn.className = 'btn-qr-item';
+            qrBtn.title = 'QRコードを表示';
+            qrBtn.setAttribute('data-name', item);
+            qrBtn.textContent = 'QR';
+            qrBtn.addEventListener('click', () => showQRModal(item));
+            btnContainer.appendChild(qrBtn);
+        }
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-delete-item';
+        deleteBtn.title = '削除';
+        deleteBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        `;
+        deleteBtn.addEventListener('click', () => onDelete(index));
+        btnContainer.appendChild(deleteBtn);
+
+        div.appendChild(btnContainer);
+
         container.appendChild(div);
     });
+}
+
+function showQRModal(vehicleName) {
+    const modal = document.getElementById('qr-modal');
+    const qrContainer = document.getElementById('qr-code-container');
+    const urlDisplay = document.getElementById('qr-url-display');
+    const vehicleNameDisplay = document.getElementById('qr-vehicle-name');
+
+    // Generate URL
+    const baseUrl = window.location.origin + window.location.pathname;
+    const targetUrl = `${baseUrl}?vehicle=${encodeURIComponent(vehicleName)}`;
+
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+
+    // Generate new QR Code
+    new QRCode(qrContainer, {
+        text: targetUrl,
+        width: 160,
+        height: 160,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+    });
+
+    urlDisplay.value = targetUrl;
+    vehicleNameDisplay.textContent = vehicleName;
+    modal.style.display = 'flex';
+}
+
+function printQRCode() {
+    const qrContainer = document.getElementById('qr-code-container');
+    const vehicleName = document.getElementById('qr-vehicle-name').textContent;
+    const qrImg = qrContainer.querySelector('img');
+
+    if (!qrImg) {
+        alert('QRコードが生成されていません');
+        return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>QR Code Print - ${vehicleName}</title>
+            <style>
+                body {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    font-family: sans-serif;
+                }
+                .container {
+                    text-align: center;
+                    border: 2px solid #ccc;
+                    padding: 40px;
+                    border-radius: 20px;
+                }
+                h1 { margin-bottom: 20px; font-size: 24px; }
+                img { width: 300px; height: 300px; }
+                .footer { margin-top: 20px; color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>${vehicleName}</h1>
+                <img src="${qrImg.src}" />
+                <div class="footer">運行日報 車両用QRコード</div>
+            </div>
+            <script>
+                window.onload = () => {
+                    window.print();
+                    window.onafterprint = () => window.close();
+                };
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+// ------------------------------------------------------------------
+// Custom Confirmation Modal
+// ------------------------------------------------------------------
+let currentConfirmResolve = null;
+
+function showActionConfirm(options) {
+    const { title, message, btnText, btnColor } = options;
+    const modal = document.getElementById('action-confirm-modal');
+    const titleEl = document.getElementById('action-confirm-title');
+    const msgEl = document.getElementById('action-confirm-message');
+    const executeBtn = document.getElementById('btn-action-execute');
+
+    titleEl.textContent = title || '確認';
+    msgEl.textContent = message || '実行しますか？';
+    executeBtn.textContent = btnText || '実行';
+    executeBtn.style.background = btnColor || ''; // Reset or set
+
+    modal.style.display = 'flex';
+
+    return new Promise((resolve) => {
+        currentConfirmResolve = resolve;
+    });
+}
+
+function closeActionConfirm(result) {
+    document.getElementById('action-confirm-modal').style.display = 'none';
+    if (currentConfirmResolve) {
+        currentConfirmResolve(result);
+        currentConfirmResolve = null;
+    }
 }
 
 // ---- Add/Delete Logic ----
@@ -239,8 +419,15 @@ function addItem(storageKey, inputId, renderFunc) {
     input.value = '';
 }
 
-function deleteItem(storageKey, index, renderFunc) {
-    if (!confirm('削除しますか？')) return;
+async function deleteItem(storageKey, index, renderFunc) {
+    const confirmed = await showActionConfirm({
+        title: '項目の削除',
+        message: 'この項目を削除してもよろしいですか？',
+        btnText: '削除',
+        btnColor: '#ef4444' // Red for delete
+    });
+
+    if (!confirmed) return;
 
     let listStr = localStorage.getItem(storageKey);
     let list = listStr ? JSON.parse(listStr) : [];
@@ -275,6 +462,19 @@ function setupEventListeners() {
         if (e.target.id === 'settings-modal') closeSettingsModal();
     });
 
+    document.getElementById('qr-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'qr-modal') document.getElementById('qr-modal').style.display = 'none';
+    });
+
+    // Action Confirm Modal
+    document.getElementById('btn-action-cancel').addEventListener('click', () => closeActionConfirm(false));
+    document.getElementById('btn-action-execute').addEventListener('click', () => closeActionConfirm(true));
+    document.getElementById('action-confirm-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'action-confirm-modal') closeActionConfirm(false);
+    });
+
+    document.getElementById('btn-print-qr').addEventListener('click', printQRCode);
+
     // Tab Switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -292,15 +492,40 @@ function setupEventListeners() {
         addItem(CHECKER_LIST_KEY, 'input-add-checker', renderCheckerList);
     });
 
+    // Vehicle Add
+    const btnAddVehicle = document.getElementById('btn-add-vehicle');
+    if (btnAddVehicle) {
+        btnAddVehicle.addEventListener('click', () => {
+            addItem(VEHICLE_LIST_KEY, 'input-add-vehicle', renderVehicleList);
+        });
+    }
+
     // GAS URL Auto Save
     document.getElementById('gas-url-input').addEventListener('input', (e) => {
         localStorage.setItem(GAS_URL_KEY, e.target.value);
     });
 
-    // Save selection on change
-    document.getElementById('driver-name').addEventListener('change', (e) => {
-        localStorage.setItem(LAST_DRIVER_KEY, e.target.value);
-    });
+    // Passcode Auto Save
+    const passInput = document.getElementById('sys-passcode-input');
+    if (passInput) {
+        passInput.addEventListener('input', (e) => {
+            localStorage.setItem(PASSCODE_KEY, e.target.value);
+        });
+    }
+
+    // JSON Save (Developer Tool)
+    const btnSaveJson = document.getElementById('btn-save-json');
+    if (btnSaveJson) {
+        btnSaveJson.addEventListener('click', saveJsonReport);
+    }
+
+    // Save selection on change (track driver 1 as the last used)
+    const driverSelect1 = document.getElementById('driver-name-1');
+    if (driverSelect1) {
+        driverSelect1.addEventListener('change', (e) => {
+            localStorage.setItem(LAST_DRIVER_KEY, e.target.value);
+        });
+    }
     document.getElementById('pre-checker').addEventListener('change', (e) => {
         localStorage.setItem(LAST_CHECKER_PRE_KEY, e.target.value);
     });
@@ -376,46 +601,32 @@ function setupEventListeners() {
     // Send Button
     document.getElementById('btn-send-gas').addEventListener('click', sendReport);
 
-    // JSON Save Button
-    const btnSaveJson = document.getElementById('btn-save-json');
-    if (btnSaveJson) {
-        btnSaveJson.addEventListener('click', saveJsonReport);
-    }
-
-    // Manual Temp Save Button
-    const btnTempSave = document.getElementById('btn-temp-save');
-    if (btnTempSave) {
-        btnTempSave.addEventListener('click', manualSave);
-    }
-
-    // Reset Button
+    // Reset Button (Unified Popup)
     const btnReset = document.getElementById('btn-reset');
     if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            if (confirm('入力内容をリセットしますか？\n（日付・運転者名は保持されます）')) {
+        btnReset.addEventListener('click', async () => {
+            const confirmed = await showActionConfirm({
+                title: '入力内容のリセット',
+                message: '現在入力中の内容をすべて消去してもよろしいですか？（送信済みのデータは消えません）',
+                btnText: 'リセット',
+                btnColor: '#ef4444'
+            });
+            if (confirmed) {
                 resetForm();
-                // Also clear history for this date? 
-                // Resetting form visually is one thing, but if we don't clear history, it might come back on reload.
-                // Requirement: "Input reset". Usually implies clearing data.
-                // Let's clear the history for the current date too.
-                const dateVal = document.getElementById('report-date').value;
-                if (dateVal) {
-                    let history = {};
-                    try {
-                        const json = localStorage.getItem(HISTORY_KEY);
-                        if (json) history = JSON.parse(json);
-                    } catch (e) { }
-
-                    delete history[dateVal];
-                    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-                }
-                alert('リセットしました');
             }
         });
     }
 
-    // Auto-Save listeners removed per user request.
-    // Data is only saved when "Temporary Save" is clicked.
+    // JSON Save Button and Temp Save Button Removed.
+
+    // Auto-Save listeners
+    // Periodically save to local storage if the modal is not open
+    setInterval(() => {
+        const modal = document.getElementById('settings-modal');
+        if (modal && modal.style.display !== 'flex') {
+            saveToLocal(); // Auto-save in the background
+        }
+    }, 5000); // 5 seconds
 }
 
 // ------------------------------------------------------------------
@@ -491,7 +702,13 @@ function fillForm(data) {
         if (el) el.value = val || '';
     };
 
-    setVal('driver-name', data.driver);
+    // Main
+    setVal('vehicle-id', data.vehicleId);
+
+    // Drivers
+    setVal('driver-name-1', data.driver1);
+    setVal('driver-name-2', data.driver2);
+    setVal('driver-name-3', data.driver3);
 
     // Pre-check
     setVal('pre-check-time', data.preCheckTime);
@@ -507,32 +724,44 @@ function fillForm(data) {
         if (r) r.checked = true;
     }
 
-    // Inspection: Pre-Inspection
-    const preInspectRadios = document.querySelectorAll('input[name="pre-inspection"]');
-    preInspectRadios.forEach(r => r.checked = false);
-    if (data.preInspection) {
-        const r = document.querySelector(`input[name="pre-inspection"][value="${data.preInspection}"]`);
-        if (r) r.checked = true;
-    }
-
-    // Rows 1-3
     setVal('destination-1', data.destination1);
     setVal('start-time-1', data.startTime1);
     setVal('start-meter-1', data.startMeter1);
+    const preInsp1Radios = document.querySelectorAll('input[name="pre-inspection-1"]');
+    preInsp1Radios.forEach(r => r.checked = false);
+    if (data.preInspection1) {
+        const r = document.querySelector(`input[name="pre-inspection-1"][value="${data.preInspection1}"]`);
+        if (r) r.checked = true;
+    }
     setVal('end-time-1', data.endTime1);
     setVal('end-meter-1', data.endMeter1);
+    setVal('vehicle-return-1', data.vehicleReturn1);
 
     setVal('destination-2', data.destination2);
     setVal('start-time-2', data.startTime2);
     setVal('start-meter-2', data.startMeter2);
+    const preInsp2Radios = document.querySelectorAll('input[name="pre-inspection-2"]');
+    preInsp2Radios.forEach(r => r.checked = false);
+    if (data.preInspection2) {
+        const r = document.querySelector(`input[name="pre-inspection-2"][value="${data.preInspection2}"]`);
+        if (r) r.checked = true;
+    }
     setVal('end-time-2', data.endTime2);
     setVal('end-meter-2', data.endMeter2);
+    setVal('vehicle-return-2', data.vehicleReturn2);
 
     setVal('destination-3', data.destination3);
     setVal('start-time-3', data.startTime3);
     setVal('start-meter-3', data.startMeter3);
+    const preInsp3Radios = document.querySelectorAll('input[name="pre-inspection-3"]');
+    preInsp3Radios.forEach(r => r.checked = false);
+    if (data.preInspection3) {
+        const r = document.querySelector(`input[name="pre-inspection-3"][value="${data.preInspection3}"]`);
+        if (r) r.checked = true;
+    }
     setVal('end-time-3', data.endTime3);
     setVal('end-meter-3', data.endMeter3);
+    setVal('vehicle-return-3', data.vehicleReturn3);
 
     toggleRowIfHasData(2, data);
     toggleRowIfHasData(3, data);
@@ -560,7 +789,6 @@ function fillForm(data) {
     // Others
     setVal('refuel-amount', data.refuelAmount);
     setVal('refuel-meter', data.refuelMeter);
-    setVal('vehicle-return', data.vehicleReturn);
     setVal('notes', data.notes);
 
     // Trigger Pre-Alcohol change for visibility
@@ -577,8 +805,7 @@ function resetForm() {
         if (el) el.value = val;
     };
 
-    setVal('driver-name', '');
-
+    setVal('vehicle-id', '');
     setVal('pre-check-time', '');
     setVal('pre-check-method', '対面');
     setVal('pre-checker', '');
@@ -587,15 +814,17 @@ function resetForm() {
     // Hide alcohol val input
     document.getElementById('pre-alcohol-val').style.display = 'none';
 
-    document.querySelectorAll('input[name="pre-inspection"]').forEach(r => r.checked = false);
 
     // Rows
     for (let i = 1; i <= 3; i++) {
+        setVal(`driver-name-${i}`, '');
         setVal(`destination-${i}`, '');
         setVal(`start-time-${i}`, '');
         setVal(`start-meter-${i}`, '');
+        document.querySelectorAll(`input[name="pre-inspection-${i}"]`).forEach(r => r.checked = false);
         setVal(`end-time-${i}`, '');
         setVal(`end-meter-${i}`, '');
+        setVal(`vehicle-return-${i}`, '');
         const distSpan = document.getElementById(`calc-distance-${i}`);
         if (distSpan) distSpan.textContent = '0';
 
@@ -617,12 +846,11 @@ function resetForm() {
 
     setVal('refuel-amount', '');
     setVal('refuel-meter', '');
-    setVal('vehicle-return', '');
     setVal('notes', '');
 }
 
 function toggleRowIfHasData(rowNum, data) {
-    const hasData = data[`destination${rowNum}`] || data[`startTime${rowNum}`] || data[`startMeter${rowNum}`];
+    const hasData = data[`driver${rowNum}`] || data[`destination${rowNum}`] || data[`startTime${rowNum}`] || data[`startMeter${rowNum}`];
     const body = document.getElementById(`row-${rowNum}-body`);
     const btn = document.querySelector(`.btn-toggle-row[data-target="row-${rowNum}-body"]`);
 
@@ -638,7 +866,7 @@ function toggleRowIfHasData(rowNum, data) {
 function collectReportData() {
     return {
         date: document.getElementById('report-date').value,
-        driver: document.getElementById('driver-name').value, // Select value
+        vehicleId: document.getElementById('vehicle-id').value, // New vehicle select
 
         // 1. Pre-check
         preCheckTime: document.getElementById('pre-check-time').value,
@@ -648,31 +876,38 @@ function collectReportData() {
         preAlcoholVal: document.getElementById('pre-alcohol-val').value,
 
         // 2. Drive Info (3 Rows)
+        driver1: document.getElementById('driver-name-1').value,
         destination1: document.getElementById('destination-1').value,
         startTime1: document.getElementById('start-time-1').value,
         startMeter1: document.getElementById('start-meter-1').value,
+        preInspection1: document.querySelector('input[name="pre-inspection-1"]:checked')?.value || '',
         endTime1: document.getElementById('end-time-1').value,
         endMeter1: document.getElementById('end-meter-1').value,
         distance1: document.getElementById('calc-distance-1').textContent,
+        vehicleReturn1: document.getElementById('vehicle-return-1').value,
 
+        driver2: document.getElementById('driver-name-2').value,
         destination2: document.getElementById('destination-2').value,
         startTime2: document.getElementById('start-time-2').value,
         startMeter2: document.getElementById('start-meter-2').value,
+        preInspection2: document.querySelector('input[name="pre-inspection-2"]:checked')?.value || '',
         endTime2: document.getElementById('end-time-2').value,
         endMeter2: document.getElementById('end-meter-2').value,
         distance2: document.getElementById('calc-distance-2').textContent,
+        vehicleReturn2: document.getElementById('vehicle-return-2').value,
 
+        driver3: document.getElementById('driver-name-3').value,
         destination3: document.getElementById('destination-3').value,
         startTime3: document.getElementById('start-time-3').value,
         startMeter3: document.getElementById('start-meter-3').value,
+        preInspection3: document.querySelector('input[name="pre-inspection-3"]:checked')?.value || '',
         endTime3: document.getElementById('end-time-3').value,
         endMeter3: document.getElementById('end-meter-3').value,
         distance3: document.getElementById('calc-distance-3').textContent,
+        vehicleReturn3: document.getElementById('vehicle-return-3').value,
 
         totalDistance: document.getElementById('calc-distance-total').textContent,
-
-        // 3. Others
-        preInspection: document.querySelector('input[name="pre-inspection"]:checked')?.value || '',
+        isOver400km: parseFloat(document.getElementById('calc-distance-total').textContent || '0') > 400,
 
         // Post-check
         postCheckTime: document.getElementById('post-check-time').value,
@@ -683,14 +918,16 @@ function collectReportData() {
         // Others
         refuelAmount: document.getElementById('refuel-amount').value,
         refuelMeter: document.getElementById('refuel-meter').value,
-        vehicleReturn: document.getElementById('vehicle-return').value,
-        notes: document.getElementById('notes').value
+        notes: document.getElementById('notes').value,
+
+        // Security
+        passcode: document.getElementById('sys-passcode-input').value
     };
 }
 
 function saveJsonReport() {
     const data = collectReportData();
-    const fileName = `driving_report_${data.date}_${data.driver}.json`;
+    const fileName = `driving_report_${data.date}_${data.driver1 || '未選択'}.json`;
     const jsonStr = JSON.stringify(data, null, 2);
 
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -716,18 +953,36 @@ async function sendReport() {
         return;
     }
 
+    if (!url.startsWith('https://')) {
+        statusMsg.textContent = 'セキュリティ保護のため、https:// で始まるURLのみ送信可能です';
+        statusMsg.className = 'status-msg status-error';
+        return;
+    }
+
     // Collect Data
     const data = collectReportData();
 
     // Validation (Simple)
-    if (!data.date || !data.driver) {
-        statusMsg.textContent = '日付と運転者名は必須です';
+    if (!data.date || !data.vehicleId || !data.driver1) {
+        statusMsg.textContent = '日付、車両、記録1の運転者名は必須です';
+        statusMsg.className = 'status-msg status-error';
+        return;
+    }
+
+    if (!document.getElementById('sys-passcode-input').value) {
+        statusMsg.textContent = '送信パスコードが設定されていません (設定画面右上の歯車ボタンから入力してください)';
         statusMsg.className = 'status-msg status-error';
         return;
     }
 
     statusMsg.textContent = '送信中...';
     statusMsg.className = 'status-msg';
+
+    // エラーログエリアを一旦隠す
+    const logContainer = document.getElementById('error-log-container');
+    const logArea = document.getElementById('error-log');
+    if (logContainer) logContainer.style.display = 'none';
+    if (logArea) logArea.value = '';
 
     try {
         // GASのCORS制約を回避するため、Content-Typeを text/plain に設定します。
@@ -766,12 +1021,21 @@ async function sendReport() {
             statusMsg.textContent = '送信しました！';
             statusMsg.className = 'status-msg status-success';
         } else {
-            throw new Error(result.message || 'Unknown error from server');
+            throw new Error(`サーバーエラー: ${result.message || 'Unknown error'}`);
         }
 
     } catch (e) {
         console.error(e);
-        statusMsg.textContent = '送信に失敗しました: ' + e.message;
+        statusMsg.textContent = '送信に失敗しました (詳細はログを確認)';
         statusMsg.className = 'status-msg status-error';
+
+        // ログエリアを表示して詳細を出力
+        const logContainer = document.getElementById('error-log-container');
+        const logArea = document.getElementById('error-log');
+        if (logContainer && logArea) {
+            logContainer.style.display = 'block';
+            const timestamp = new Date().toISOString();
+            logArea.value = `[${timestamp}]\nエラーの種類: ${e.name}\nエラーメッセージ: ${e.message}\n\n送信先URL:\n${url}\n\n送信データ:\n${JSON.stringify(data, null, 2)}`;
+        }
     }
 }

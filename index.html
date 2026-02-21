@@ -39,9 +39,14 @@
         <!-- メインコンテンツ -->
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
-                <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
-                <button class="btn-theme-toggle" title="完了場所設定" id="btn-settings">&#9881;</button>
-                <button class="btn-reset-corner" title="すべてリセット" id="btn-reset-all">&#x21ba;</button>
+                <div class="top-right-actions">
+                    <button id="btn-reset-all" class="btn-icon-text" title="すべてリセット">
+                        <span class="icon">🔄</span>
+                        <span class="label">リセット</span>
+                    </button>
+                    <button class="btn-theme-toggle" title="完了場所設定" id="btn-settings">&#9881;</button>
+                    <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
+                </div>
 
                 <div class="preset-toolbar">
                     <div class="preset-dropdown" id="preset-dropdown">

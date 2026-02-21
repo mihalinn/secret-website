@@ -15,6 +15,9 @@
 
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="driving_report.css">
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -39,23 +42,17 @@
         <!-- メインコンテンツ -->
         <main class="grid single-column wide-layout">
             <section class="card glass form-card">
-                <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
-                <button class="btn-theme-toggle" title="各種設定" id="btn-settings">&#9881;</button>
-
-                <!-- Toolbar (Reset / Temp Save) -->
-                <div class="toolbar-actions">
+                <div class="top-right-actions">
                     <button id="btn-reset" class="btn-icon-text" title="入力内容をリセット">
-                        <span class="icon">🔄</span>
+                        <svg class="icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
                         <span class="label">リセット</span>
                     </button>
-                    <button id="btn-temp-save" class="btn-icon-text primary" title="一時保存">
-                        <span class="icon">💾</span>
-                        <span class="label">一時保存</span>
-                    </button>
-                    <button id="btn-save-json" class="btn-icon-text" title="JSON形式で保存">
-                        <span class="icon">📥</span>
-                        <span class="label">JSON保存</span>
-                    </button>
+                    <button class="btn-theme-toggle" title="各種設定" id="btn-settings">&#9881;</button>
+                    <button class="btn-theme-toggle" title="テーマ切替" id="theme-btn">&#9790;</button>
                 </div>
 
                 <div class="report-header">
@@ -64,10 +61,11 @@
                         <input type="date" id="report-date" class="input-date">
                         <span id="report-day-of-week" class="day-label"></span>
                     </div>
+                    <!-- Removed global driver select -->
                     <div class="form-group-inline">
-                        <label>運転者</label>
+                        <label>車両</label>
                         <div class="select-with-btn">
-                            <select id="driver-name" class="input-text">
+                            <select id="vehicle-id" class="input-text">
                                 <option value="">選択してください</option>
                             </select>
                         </div>
@@ -111,13 +109,6 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top:1.5rem;">
-                    <label style="font-weight:600; color:var(--text-primary);">運行前点検</label>
-                    <div class="radio-group" id="pre-inspection-group" style="margin-top:0.5rem;">
-                        <label><input type="radio" name="pre-inspection" value="実施" checked> 実施</label>
-                        <label><input type="radio" name="pre-inspection" value="未実施"> 未実施</label>
-                    </div>
-                </div>
 
                 <hr class="divider">
 
@@ -127,9 +118,26 @@
                 <!-- Row 1 -->
                 <div class="sub-section" style="margin-bottom: 1rem;">
                     <h4 style="color:var(--accent); border-color:var(--accent);">記録 1</h4>
-                    <div class="form-group">
+                    <div
+                        style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>運転者</label>
+                            <select id="driver-name-1" class="input-text" style="width: auto; min-width: 150px;">
+                                <option value="">選択してください</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
+                            <label>運行前点検</label>
+                            <div class="radio-group" id="pre-inspection-group-1">
+                                <label><input type="radio" name="pre-inspection-1" value="実施" checked> 実施</label>
+                                <label><input type="radio" name="pre-inspection-1" value="未実施"> 未実施</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
                         <label>訪問先・現場名等</label>
-                        <input type="text" id="destination-1" class="input-text-wide" placeholder="行き先を入力">
+                        <input type="text" id="destination-1" class="input-text-wide" placeholder="行き先を入力"
+                            style="width: 100%;">
                     </div>
                     <div class="grid-2col">
                         <!-- 出発 -->
@@ -141,10 +149,14 @@
                                     <button class="btn-now" data-target="start-time-1">現在</button>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0.5rem;">
                                 <label>出発メーター</label>
-                                <input type="number" id="start-meter-1" class="input-meter" placeholder="km">
+                                <div class="input-unit-group">
+                                    <input type="number" id="start-meter-1" class="input-text" placeholder="0">
+                                    <span class="unit">km</span>
+                                </div>
                             </div>
+
                         </div>
                         <!-- 到着 -->
                         <div>
@@ -155,9 +167,23 @@
                                     <button class="btn-now" data-target="end-time-1">現在</button>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0.5rem;">
                                 <label>到着メーター</label>
-                                <input type="number" id="end-meter-1" class="input-meter" placeholder="km">
+                                <div class="input-unit-group">
+                                    <input type="number" id="end-meter-1" class="input-text" placeholder="0">
+                                    <span class="unit">km</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>車両持帰状況</label>
+                                <select id="vehicle-return-1" class="input-text">
+                                    <option value="">未選択</option>
+                                    <option value="直行">直行</option>
+                                    <option value="直帰">直帰</option>
+                                    <option value="持帰り">持帰り</option>
+                                    <option value="車両出社">車両出社</option>
+                                    <option value="その他">その他</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -177,9 +203,26 @@
                     </div>
                     <div id="row-2-body"
                         style="display:none; margin-top:0.5rem; border-top:1px solid var(--glass-border); padding-top:0.5rem;">
-                        <div class="form-group">
+                        <div
+                            style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label>運転者</label>
+                                <select id="driver-name-2" class="input-text" style="width: auto; min-width: 150px;">
+                                    <option value="">選択してください</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
+                                <label>運行前点検</label>
+                                <div class="radio-group" id="pre-inspection-group-2">
+                                    <label><input type="radio" name="pre-inspection-2" value="実施" checked> 実施</label>
+                                    <label><input type="radio" name="pre-inspection-2" value="未実施"> 未実施</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
                             <label>訪問先・現場名等</label>
-                            <input type="text" id="destination-2" class="input-text-wide" placeholder="行き先を入力">
+                            <input type="text" id="destination-2" class="input-text-wide" placeholder="行き先を入力"
+                                style="width: 100%;">
                         </div>
                         <div class="grid-2col">
                             <!-- 出発 -->
@@ -191,10 +234,14 @@
                                         <button class="btn-now" data-target="start-time-2">現在</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
                                     <label>出発メーター</label>
-                                    <input type="number" id="start-meter-2" class="input-meter" placeholder="km">
+                                    <div class="input-unit-group">
+                                        <input type="number" id="start-meter-2" class="input-text" placeholder="0">
+                                        <span class="unit">km</span>
+                                    </div>
                                 </div>
+
                             </div>
                             <!-- 到着 -->
                             <div>
@@ -205,9 +252,23 @@
                                         <button class="btn-now" data-target="end-time-2">現在</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
                                     <label>到着メーター</label>
-                                    <input type="number" id="end-meter-2" class="input-meter" placeholder="km">
+                                    <div class="input-unit-group">
+                                        <input type="number" id="end-meter-2" class="input-text" placeholder="0">
+                                        <span class="unit">km</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>車両持帰状況</label>
+                                    <select id="vehicle-return-2" class="input-text">
+                                        <option value="">未選択</option>
+                                        <option value="直行">直行</option>
+                                        <option value="直帰">直帰</option>
+                                        <option value="持帰り">持帰り</option>
+                                        <option value="車両出社">車両出社</option>
+                                        <option value="その他">その他</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -228,9 +289,26 @@
                     </div>
                     <div id="row-3-body"
                         style="display:none; margin-top:0.5rem; border-top:1px solid var(--glass-border); padding-top:0.5rem;">
-                        <div class="form-group">
+                        <div
+                            style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label>運転者</label>
+                                <select id="driver-name-3" class="input-text" style="width: auto; min-width: 150px;">
+                                    <option value="">選択してください</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
+                                <label>運行前点検</label>
+                                <div class="radio-group" id="pre-inspection-group-3">
+                                    <label><input type="radio" name="pre-inspection-3" value="実施" checked> 実施</label>
+                                    <label><input type="radio" name="pre-inspection-3" value="未実施"> 未実施</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
                             <label>訪問先・現場名等</label>
-                            <input type="text" id="destination-3" class="input-text-wide" placeholder="行き先を入力">
+                            <input type="text" id="destination-3" class="input-text-wide" placeholder="行き先を入力"
+                                style="width: 100%;">
                         </div>
                         <div class="grid-2col">
                             <!-- 出発 -->
@@ -242,10 +320,14 @@
                                         <button class="btn-now" data-target="start-time-3">現在</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
                                     <label>出発メーター</label>
-                                    <input type="number" id="start-meter-3" class="input-meter" placeholder="km">
+                                    <div class="input-unit-group">
+                                        <input type="number" id="start-meter-3" class="input-text" placeholder="0">
+                                        <span class="unit">km</span>
+                                    </div>
                                 </div>
+
                             </div>
                             <!-- 到着 -->
                             <div>
@@ -256,9 +338,23 @@
                                         <button class="btn-now" data-target="end-time-3">現在</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
                                     <label>到着メーター</label>
-                                    <input type="number" id="end-meter-3" class="input-meter" placeholder="km">
+                                    <div class="input-unit-group">
+                                        <input type="number" id="end-meter-3" class="input-text" placeholder="0">
+                                        <span class="unit">km</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>車両持帰状況</label>
+                                    <select id="vehicle-return-3" class="input-text">
+                                        <option value="">未選択</option>
+                                        <option value="直行">直行</option>
+                                        <option value="直帰">直帰</option>
+                                        <option value="持帰り">持帰り</option>
+                                        <option value="車両出社">車両出社</option>
+                                        <option value="その他">その他</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -317,21 +413,16 @@
                     <div class="form-group">
                         <label>給油</label>
                         <div class="input-unit-group">
-                            <input type="number" id="refuel-amount" placeholder="0" step="0.1">
+                            <input type="number" id="refuel-amount" class="input-text" placeholder="0" step="0.1">
                             <span class="unit">L</span>
                         </div>
-                        <input type="number" id="refuel-meter" placeholder="給油時メーター" style="margin-top:4px;">
                     </div>
                     <div class="form-group">
-                        <label>車両持帰状況</label>
-                        <select id="vehicle-return">
-                            <option value="">未選択</option>
-                            <option value="直行">直行</option>
-                            <option value="直帰">直帰</option>
-                            <option value="持帰り">持帰り</option>
-                            <option value="車両出社">車両出社</option>
-                            <option value="その他">その他</option>
-                        </select>
+                        <label>給油時メーター</label>
+                        <div class="input-unit-group">
+                            <input type="number" id="refuel-meter" class="input-text" placeholder="0">
+                            <span class="unit">km</span>
+                        </div>
                     </div>
                 </div>
 
@@ -340,19 +431,89 @@
                     <textarea id="notes" rows="2" class="input-textarea" placeholder="備考があれば入力"></textarea>
                 </div>
 
+                <!-- パスコード入力欄は設定モーダルに移動しました -->
+
                 <!-- 送信ボタンエリア -->
-                <!-- 送信ボタンエリア -->
-                <!-- 送信ボタンエリア -->
-                <div class="action-area">
-                    <button id="btn-send-gas" class="btn-primary-large">
-                        <span class="icon">📤</span>
+                <div class="action-area" style="margin-top: 1rem;">
+                    <button id="btn-send-gas" class="btn-primary-large"
+                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
                         日報を送信
                     </button>
                     <div id="status-msg" class="status-msg"></div>
+
+                    <!-- 送信エラー時用詳細ログ表示エリア -->
+                    <div id="error-log-container" style="display:none; margin-top: 1rem; text-align: left;">
+                        <label style="color:var(--text-secondary); font-size:0.8rem;">エラー詳細ログ (※開発者への共有用)</label>
+                        <textarea id="error-log" rows="6" class="input-textarea"
+                            style="font-size:0.8rem; font-family:monospace; background:rgba(0,0,0,0.5); color:#ff6b6b;"
+                            readonly></textarea>
+                    </div>
                 </div>
 
             </section>
         </main>
+    </div>
+
+    <!-- QRコード表示用モーダル -->
+    <div id="qr-modal" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-card" style="text-align: center; max-width: 320px;">
+            <div class="modal-header" style="justify-content: center; position: relative;">
+                <h2>車両QRコード</h2>
+                <button id="btn-close-qr" class="btn-close"
+                    style="position: absolute; right: 0; top: -10px;">&times;</button>
+            </div>
+            <div class="modal-body"
+                style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <p id="qr-vehicle-name"
+                    style="font-weight: 600; font-size: 1.1rem; color: var(--accent); margin-bottom: 1rem;"></p>
+                <div id="qr-code-container"
+                    style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block;">
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                    スマートフォン等のカメラで読み取ると、<br>この車両が選択された状態で日報が開きます。
+                </p>
+                <div style="display: flex; gap: 8px; width: 100%; margin-top: 1rem;">
+                    <input type="text" id="qr-url-display" readonly
+                        style="flex-grow: 1; font-size: 0.75rem; padding: 0.4rem; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-secondary); text-align: center;"
+                        onclick="this.select(); document.execCommand('copy'); alert('URLをコピーしました');">
+                    <button id="btn-print-qr" class="btn-primary" style="padding: 0 1rem; white-space: nowrap;">
+                        <span class="icon">🖨️</span> 印刷
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- アクション確認モーダル (汎用) -->
+    <div id="action-confirm-modal" class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-card" style="text-align: center; max-width: 360px;">
+            <div id="action-confirm-icon" style="margin-bottom: 1rem; color: #f87171;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h3 id="action-confirm-title"
+                style="margin-bottom: 0.5rem; color: var(--text); font-size: 1.2rem; font-weight: 700;">確認</h3>
+            <p id="action-confirm-message"
+                style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5;">
+                実行してもよろしいですか？</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="btn-action-cancel" class="btn-secondary"
+                    style="flex: 1; min-height: 48px; font-weight: 600;">キャンセル</button>
+                <button id="btn-action-execute" class="btn-primary"
+                    style="flex: 1; min-height: 48px; font-weight: 600;">実行</button>
+            </div>
+        </div>
     </div>
 
     <!-- 設定モーダル (ひとまとめ) -->
@@ -365,18 +526,19 @@
             <div class="modal-body">
 
                 <!-- タブ切り替え風 -->
-                <div class="settings-tabs">
-                    <button class="tab-btn active" data-tab="driver">運転者リスト</button>
-                    <button class="tab-btn" data-tab="checker">確認者リスト</button>
+                <div class="modal-tabs">
+                    <button class="tab-btn active" data-tab="driver">運転者</button>
+                    <button class="tab-btn" data-tab="checker">確認者</button>
+                    <button class="tab-btn" data-tab="vehicle">車両</button>
                     <button class="tab-btn" data-tab="system">システム</button>
                 </div>
 
                 <!-- 運転者設定 -->
                 <div id="tab-driver" class="tab-content active">
-                    <p class="modal-desc">運転者名簿の編集</p>
+                    <p class="modal-desc">日報の運転者リストの編集</p>
                     <div id="driver-list-container" class="list-edit-container"></div>
                     <div class="add-item-row">
-                        <input type="text" id="input-add-driver" class="input-add-item" placeholder="運転者を追加">
+                        <input type="text" id="input-add-driver" class="input-add-item" placeholder="運転者名を追加">
                         <button class="btn-add-item" id="btn-add-driver">追加</button>
                     </div>
                 </div>
@@ -391,17 +553,39 @@
                     </div>
                 </div>
 
+                <!-- 車両設定 -->
+                <div id="tab-vehicle" class="tab-content">
+                    <p class="modal-desc">使用車両リストの編集</p>
+                    <div id="vehicle-list-container" class="list-edit-container"></div>
+                    <div class="add-item-row">
+                        <input type="text" id="input-add-vehicle" class="input-add-item" placeholder="車両名を追加">
+                        <button class="btn-add-item" id="btn-add-vehicle">追加</button>
+                    </div>
+                </div>
+
                 <!-- システム設定 -->
                 <div id="tab-system" class="tab-content">
-                    <p class="modal-desc">Google Apps Script連携設定</p>
+                    <p class="modal-desc">システム・セキュリティ連携設定</p>
                     <div class="form-group">
-                        <label>Webアプリ URL</label>
+                        <label>Google Apps Script Webアプリ URL</label>
                         <input type="password" id="gas-url-input" class="input-text"
                             placeholder="https://script.google.com/..." style="width:100%">
                     </div>
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label>送信パスコード</label>
+                        <input type="password" id="sys-passcode-input" class="input-text" placeholder="半角英数字 (1234 等)"
+                            style="width:100%">
+                    </div>
                     <p class="modal-desc" style="font-size:0.8rem; margin-top:0.5rem;">
-                        ※ 入力すると自動保存されます。
+                        ※ 入力すると端末内に自動保存されます。
                     </p>
+
+                    <hr class="divider" style="margin: 1.5rem 0 1rem 0;">
+                    <p class="section-title" style="font-size:0.9rem; margin-bottom:0.5rem;">開発者向けツール</p>
+                    <button id="btn-save-json" class="btn-secondary"
+                        style="width:100%; border-style: dashed; font-size: 0.85rem;">
+                        現在入力をJSON形式で保存
+                    </button>
                 </div>
 
             </div>

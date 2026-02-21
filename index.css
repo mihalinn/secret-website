@@ -159,69 +159,8 @@
 }
 
 /* --------------------------------------------------
-   Reset Button (top-right corner)
+   Control Grid  (8 cols × 4 rows)
    -------------------------------------------------- */
-.btn-reset-corner {
-    position: absolute;
-    top: 6px;
-    right: 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--glass-border);
-    color: var(--text-secondary);
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, color 0.15s;
-    z-index: 1;
-}
-
-.btn-reset-corner:hover {
-    background: rgba(248, 113, 113, 0.2);
-    color: #f87171;
-    border-color: rgba(248, 113, 113, 0.4);
-}
-
-/* Theme & Settings Buttons (Share same base style as reset) */
-.btn-theme-toggle {
-    position: absolute;
-    top: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--glass-border);
-    color: var(--text-secondary);
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, color 0.15s;
-    z-index: 1;
-}
-
-.btn-theme-toggle:hover {
-    background: rgba(248, 113, 113, 0.2);
-    color: #f87171;
-    border-color: rgba(248, 113, 113, 0.4);
-}
-
-/* Header Button Positioning (Gap 8px) */
-/* Reset: right 16px (defined in .btn-reset-corner) */
-#theme-btn {
-    right: 54px;
-    /* 16 + 30 + 8 = 54 */
-}
-
-#btn-settings {
-    right: 92px;
-    /* 54 + 30 + 8 = 92 */
-}
 
 /* --------------------------------------------------
    Control Grid  (8 cols × 4 rows)
@@ -476,16 +415,6 @@ input[type="time"] {
 }
 
 /* Light Mode Overrides (Attendance) */
-[data-theme="light"] .btn-reset-corner,
-[data-theme="light"] .btn-theme-toggle {
-    background: rgba(0, 0, 0, 0.04);
-}
-
-[data-theme="light"] .btn-reset-corner:hover,
-[data-theme="light"] .btn-theme-toggle:hover {
-    background: rgba(248, 113, 113, 0.12);
-}
-
 [data-theme="light"] .result-box:focus {
     background: rgba(0, 0, 0, 0.03);
 }

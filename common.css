@@ -236,12 +236,19 @@ select {
 }
 
 /* --------------------------------------------------
-   Theme Toggle Button
+   Top Right Actions (Theme, Settings, Reset)
    -------------------------------------------------- */
-.btn-theme-toggle {
+.top-right-actions {
     position: absolute;
-    top: 6px;
-    right: 52px;
+    top: 8px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.btn-theme-toggle {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--glass-border);
     color: var(--text-secondary);
@@ -254,12 +261,93 @@ select {
     align-items: center;
     justify-content: center;
     transition: background 0.15s, color 0.15s;
-    z-index: 1;
 }
 
 .btn-theme-toggle:hover {
     background: rgba(56, 189, 248, 0.15);
     color: var(--accent);
+}
+
+.btn-icon-text {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    height: 30px;
+    padding: 0 0.6rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s;
+}
+
+.btn-icon-text:hover {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.4);
+}
+
+.btn-icon-text .icon {
+    font-size: 0.95rem;
+}
+
+/* --------------------------------------------------
+   Mobile Optimization
+   -------------------------------------------------- */
+@media (max-width: 600px) {
+
+    /* Base padding */
+    body {
+        padding: 1rem 0.5rem;
+    }
+
+    .card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    /* Common Form Inputs */
+    select,
+    input[type="time"],
+    input[type="text"],
+    input[type="number"],
+    .input-textarea {
+        min-height: 44px;
+        /* Ensure fat-finger friendly tap targets */
+        font-size: 1rem;
+        /* Prevent zoom on focus */
+    }
+
+    /* Modals */
+    .modal-content {
+        width: 95%;
+        padding: 1rem;
+    }
+
+    /* Typography */
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .top-right-actions {
+        top: 8px;
+        right: 12px;
+        gap: 6px;
+    }
+
+    .btn-icon-text .label {
+        display: none;
+    }
+
+    .btn-icon-text {
+        padding: 0;
+        width: 30px;
+        justify-content: center;
+    }
 }
 
 /* --------------------------------------------------
@@ -298,8 +386,13 @@ select {
     background: rgba(16, 185, 129, 0.08);
 }
 
-[data-theme="light"] .btn-theme-toggle {
+[data-theme="light"] .btn-theme-toggle,
+[data-theme="light"] .btn-icon-text {
     background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .btn-icon-text:hover {
+    background: rgba(248, 113, 113, 0.12);
 }
 
 [data-theme="light"] .btn-icon:hover {
