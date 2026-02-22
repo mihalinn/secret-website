@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attempt to load autosaved data LAST (to overwrite defaults)
     loadFromLocal();
 
-    // Start auto-saving loop or bind events (we bind events in setupEventListeners)
+    // Finally handle URL parameters (QR Code) to ensure they take priority
+    handleUrlParams();
 });
 
 function initDate() {
@@ -79,19 +80,12 @@ function initDropdowns() {
 
     // Vehicles
     updateDropdownOptions(VEHICLE_LIST_KEY, ['vehicle-id'], DEFAULT_VEHICLES);
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlVehicle = urlParams.get('vehicle');
 
-    if (urlVehicle) {
-        // If passed via URL (QR Code), prioritize it and save as last used
-        document.getElementById('vehicle-id').value = urlVehicle;
-        localStorage.setItem(LAST_VEHICLE_KEY, urlVehicle);
-    } else {
-        // Fallback to local storage
-        const lastVehicle = localStorage.getItem(LAST_VEHICLE_KEY);
-        if (lastVehicle) {
-            document.getElementById('vehicle-id').value = lastVehicle;
-        }
+    // Fallback to last used vehicle if no data was restored from history 
+    // (Note: handleUrlParams will overwrite this if vehicle is in URL)
+    const lastVehicle = localStorage.getItem(LAST_VEHICLE_KEY);
+    if (lastVehicle && !document.getElementById('vehicle-id').value) {
+        document.getElementById('vehicle-id').value = lastVehicle;
     }
 
     // Checkers (Pre & Post)
@@ -102,6 +96,28 @@ function initDropdowns() {
     // Post checker defaults to Pre checker if not set? No, let's load last used.
     const lastPostChecker = localStorage.getItem(LAST_CHECKER_POST_KEY);
     if (lastPostChecker) document.getElementById('post-checker').value = lastPostChecker;
+}
+
+/** URLパラメータ（QRコード等）の処理 */
+function handleUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlVehicle = urlParams.get('vehicle');
+
+    if (urlVehicle) {
+        const select = document.getElementById('vehicle-id');
+        if (select) {
+            // Verify if the vehicle exists in the dropdown options
+            const options = Array.from(select.options).map(opt => opt.value);
+            if (options.includes(urlVehicle)) {
+                select.value = urlVehicle;
+                // QRで指定された場合は「最後に使った車両」としても更新
+                localStorage.setItem(LAST_VEHICLE_KEY, urlVehicle);
+                console.log(`Vehicle selected via URL parameter: ${urlVehicle}`);
+            } else {
+                console.warn(`Vehicle from URL not found in list: ${urlVehicle}`);
+            }
+        }
+    }
 }
 
 function updateDropdownOptions(storageKey, elementIds, defaultList) {
