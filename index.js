@@ -52,7 +52,9 @@ function saveCurrentAsDefaults() {
         }
     }
     DEFAULTS = newDefaults;
-    localStorage.setItem(STORAGE_KEY_DEFAULTS, JSON.stringify(DEFAULTS));
+    try {
+        localStorage.setItem(STORAGE_KEY_DEFAULTS, JSON.stringify(DEFAULTS));
+    } catch (e) { console.error('Defaults save error', e); }
 
     const msg = document.getElementById('msg-save-default');
     if (msg) {
@@ -542,8 +544,10 @@ function loadLocations() {
 
 /** LocalStorageへ保存 */
 function saveLocations() {
-    localStorage.setItem(STORAGE_KEY_MASTER, JSON.stringify(masterLocationList));
-    localStorage.setItem(STORAGE_KEY_FAV, JSON.stringify(favoriteLocations));
+    try {
+        localStorage.setItem(STORAGE_KEY_MASTER, JSON.stringify(masterLocationList));
+        localStorage.setItem(STORAGE_KEY_FAV, JSON.stringify(favoriteLocations));
+    } catch (e) { console.error('Location save error', e); }
 }
 
 /** 場所プルダウンの再描画 */
@@ -790,7 +794,15 @@ function saveDataToDate(targetDate, btnId) {
         presets = presets.slice(0, 100);
     }
 
-    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    try {
+        localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    } catch (e) {
+        console.error('Preset save error', e);
+        // 容量不足の場合は警告
+        if (e.name === 'QuotaExceededError') {
+            alert('ストレージ容量が不足しています。古い履歴を削除してください。');
+        }
+    }
     renderPresetMenu();
     updateCurrentPresetLabel(targetDate);
 
@@ -807,10 +819,21 @@ function saveDataToDate(targetDate, btnId) {
 }
 
 /** 履歴の削除 */
-function deletePreset(index, e) {
+async function deletePreset(index, e) {
     if (e) e.stopPropagation();
+
+    const confirmed = await showActionConfirm({
+        title: '履歴の削除',
+        message: 'この日の履歴データを削除してもよろしいですか？',
+        btnText: '削除',
+        btnColor: '#f87171'
+    });
+    if (!confirmed) return;
+
     presets.splice(index, 1);
-    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    try {
+        localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    } catch (e) { console.error('Preset delete save error', e); }
     renderPresetMenu();
     updateCurrentPresetLabel(null);
 
@@ -980,7 +1003,12 @@ async function importSettingsAsJson(e) {
     if (!file) return;
 
     // 基本的にみんなが使う機能なので、確認ダイアログを表示
-    if (!confirm('設定ファイルを読み込みますか？現在のお気に入り場所や履歴が上書きされます。')) {
+    const confirmed = await showActionConfirm({
+        title: '設定のインポート',
+        message: '設定ファイルを読み込みますか？現在のお気に入り場所や履歴が上書きされます。',
+        btnText: 'インポート'
+    });
+    if (!confirmed) {
         e.target.value = '';
         return;
     }

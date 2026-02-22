@@ -11,7 +11,9 @@ function toggleTheme() {
     const newTheme = isLight ? 'dark' : 'light';
 
     root.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    try {
+        localStorage.setItem('attendance_theme', newTheme);
+    } catch (e) { console.error('Theme save error', e); }
     updateThemeButton(newTheme);
 
     // テーマ変更イベントを発火（各ツールが必要に応じてリッスン）
@@ -35,7 +37,7 @@ function updateThemeButton(theme) {
 
 /** 保存済みテーマを適用（各ページの初期化前に呼ぶ） */
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('attendance_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeButton(savedTheme);
 }
