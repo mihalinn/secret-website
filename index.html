@@ -288,7 +288,17 @@
                     <span id="msg-save-default" class="success-msg"></span>
                 </section>
                 <hr style="border:0; border-top:1px solid var(--glass-border); margin:16px 0;">
-                <p class="modal-desc">よく行く場所を選択してください（リストの上位に表示されます）</p>
+                <section class="settings-section" style="margin-bottom: 24px;">
+                    <h3>場所の追加</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="input-add-location" class="input-text" placeholder="例: 東京都新宿区"
+                            style="flex: 1;">
+                        <button id="btn-add-location" class="btn-primary" style="padding: 0 20px;">追加</button>
+                    </div>
+                </section>
+
+                <h3 style="margin-bottom: 8px; font-size: 1rem;">登録済み場所の一覧</h3>
+                <p class="modal-desc">場所の選択（お気に入り）や削除ができます。</p>
                 <div id="location-settings-list" class="settings-grid">
                     <!-- JSで生成 -->
                 </div>

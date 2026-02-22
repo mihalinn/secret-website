@@ -193,8 +193,9 @@ function updateBadge(prefix, minutes) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
 
-    hEl.textContent = String(h);
-    mEl.textContent = m.toString().padStart(2, '0');
+    if (hEl) hEl.textContent = String(h);
+    if (mEl) mEl.textContent = m.toString().padStart(2, '0');
+
 
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     const activeColor = isLight ? '#059669' : '#34d399';
@@ -204,10 +205,13 @@ function updateBadge(prefix, minutes) {
     const color = minutes > 0 ? activeColor : inactiveColor;
     const bg = minutes > 0 ? activeBg : 'var(--ot-inactive-bg)';
 
-    const badge = hEl.closest('.overtime-badge');
-    badge.style.background = bg;
-    badge.style.color = color;
+    const badge = hEl ? hEl.closest('.overtime-badge') : null;
+    if (badge) {
+        badge.style.background = bg;
+        badge.style.color = color;
+    }
 }
+
 
 // --------------------------------------------------
 //  レポート生成
@@ -342,7 +346,7 @@ function generateReport(e) {
     const endTypeStr = endForget ? `(打忘・${endType.slice(1, -1)})` : endType;
     const endTime = formatTime(val('end-time'));
 
-    afterReturn = newConn2 + newEndContent + endTypeStr + endTime;
+    const afterReturn = newConn2 + newEndContent + endTypeStr + endTime;
 
     const result = `${startTypeStr}${startTime}${conn1}${middle}${middle2}${retPart}${afterReturn}`;
 
@@ -497,42 +501,50 @@ function updateReminders() {
 // --------------------------------------------------
 //  完了場所設定 (お気に入り機能)
 // --------------------------------------------------
-const ALL_LOCATIONS = [
-    '高崎市', '前橋市', '太田市', '伊勢崎市', '足利市', '桐生市', '館林市',
-    '渋川市', '藤岡市', '安中市', 'みどり市', '富岡市', '沼田市',
-    '大泉町', '玉村町', '邑楽町', '吉岡町', 'みなかみ町', '中之条町',
-    '榛東村', '板倉町', '甘楽町', '東吾妻町', '千代田町', '明和町',
-    '嬬恋村', '昭和村', '下仁田町', '草津町', '長野原町', '片品村',
-    '高山村', '川場村', '神流町', '南牧村', '上野村'
-];
+// --------------------------------------------------
+//  完了場所設定 (お気に入り & カスタム場所機能)
+// --------------------------------------------------
+let masterLocationList = []; // 全ての場所
+let favoriteLocations = [];  // お気に入り登録された場所
 
-let favoriteLocations = [];
-
+const STORAGE_KEY_MASTER = 'attendance_master_locations';
 const STORAGE_KEY_FAV = 'attendance_fav_locations';
 
 /** LocalStorageから読み込み */
-function loadFavorites() {
-    const json = localStorage.getItem(STORAGE_KEY_FAV);
-    if (json) {
-        favoriteLocations = JSON.parse(json);
+function loadLocations() {
+    // マスターリストの読み込み
+    const jsonMaster = localStorage.getItem(STORAGE_KEY_MASTER);
+    if (jsonMaster) {
+        masterLocationList = JSON.parse(jsonMaster);
+    } else {
+        // 初回は空（ユーザーの要望通り）
+        masterLocationList = [];
+    }
+
+    // お気に入りリストの読み込み
+    const jsonFav = localStorage.getItem(STORAGE_KEY_FAV);
+    if (jsonFav) {
+        favoriteLocations = JSON.parse(jsonFav);
     } else {
         favoriteLocations = [];
     }
 }
 
 /** LocalStorageへ保存 */
-function saveFavorites() {
+function saveLocations() {
+    localStorage.setItem(STORAGE_KEY_MASTER, JSON.stringify(masterLocationList));
     localStorage.setItem(STORAGE_KEY_FAV, JSON.stringify(favoriteLocations));
 }
 
 /** 場所プルダウンの再描画 */
 function renderLocationOptions() {
     const select = document.getElementById('middle-type-2');
-    const currentVal = select.value; // 選択状態を維持するため
+    if (!select) return;
+    const currentVal = select.value;
 
     // お気に入りとその他に分離
-    const favs = ALL_LOCATIONS.filter(loc => favoriteLocations.includes(loc));
-    const others = ALL_LOCATIONS.filter(loc => !favoriteLocations.includes(loc));
+    const favs = masterLocationList.filter(loc => favoriteLocations.includes(loc)).sort();
+    const others = masterLocationList.filter(loc => !favoriteLocations.includes(loc)).sort();
 
     let html = '';
 
@@ -555,57 +567,110 @@ function renderLocationOptions() {
     select.innerHTML = html;
 
     // 前回の選択値を復元（もしリストにあれば）
-    // なければデフォルト値 or 先頭
-    if (currentVal && (favs.includes(currentVal) || others.includes(currentVal))) {
+    if (currentVal && masterLocationList.includes(currentVal)) {
         select.value = currentVal;
     } else {
-        // 初期値(高崎市)があればそれ、なければ先頭
-        if (favs.includes('高崎市') || others.includes('高崎市')) {
-            select.value = '高崎市';
-        } else {
-            select.selectedIndex = 0;
-        }
+        select.selectedIndex = 0;
     }
+}
+
+/** 場所の追加 */
+function addLocation() {
+    const input = document.getElementById('input-add-location');
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (masterLocationList.includes(val)) {
+        alert('その場所は既に登録されています');
+        return;
+    }
+
+    masterLocationList.push(val);
+    saveLocations();
+    input.value = '';
+
+    renderSettingsCheckboxes();
+    renderLocationOptions();
+}
+
+/** 場所の削除 */
+function deleteLocation(loc) {
+    if (!confirm(`「${loc}」を削除してもよろしいですか？`)) return;
+
+    // マスターリストから削除
+    masterLocationList = masterLocationList.filter(l => l !== loc);
+    // お気に入りからも削除
+    favoriteLocations = favoriteLocations.filter(l => l !== loc);
+
+    saveLocations();
+    renderSettingsCheckboxes();
+    renderLocationOptions();
+}
+
+/** 設定モーダル内のチェックボックス描画 */
+function renderSettingsCheckboxes() {
+    const container = document.getElementById('location-settings-list');
+    if (!container) return;
+
+    if (masterLocationList.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 20px;">登録されている場所がありません</p>';
+        return;
+    }
+
+    let html = '';
+    // アルファベット/五十音順でソートして表示
+    [...masterLocationList].sort().forEach(loc => {
+        const isFav = favoriteLocations.includes(loc);
+        html += `
+            <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+                    <input type="checkbox" value="${loc}" ${isFav ? 'checked' : ''} onchange="toggleFavorite('${loc.replace(/'/g, "\\'")}', this.checked)">
+                    <span>${loc}</span>
+                </label>
+                <button onclick="deleteLocation('${loc.replace(/'/g, "\\'")}')" style="background: transparent; border: none; color: #f87171; cursor: pointer; padding: 4px; display: flex; align-items: center;" title="削除">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+/** お気に入りの切り替え (チェックボックス用) */
+function toggleFavorite(loc, isFav) {
+    if (isFav) {
+        if (!favoriteLocations.includes(loc)) favoriteLocations.push(loc);
+    } else {
+        favoriteLocations = favoriteLocations.filter(l => l !== loc);
+    }
+    saveLocations();
+    renderLocationOptions();
 }
 
 /** 設定モーダルの開閉 */
 function toggleSettingsModal(show) {
     const modal = document.getElementById('settings-modal');
+    if (!modal) return;
     modal.style.display = show ? 'flex' : 'none';
     if (show) {
         renderSettingsCheckboxes();
     }
 }
 
-/** 設定モーダル内のチェックボックス描画 */
-function renderSettingsCheckboxes() {
-    const container = document.getElementById('location-settings-list');
-    let html = '';
-    ALL_LOCATIONS.forEach(loc => {
-        const isFav = favoriteLocations.includes(loc);
-        html += `
-            <label class="setting-item">
-                <input type="checkbox" value="${loc}" ${isFav ? 'checked' : ''}>
-                <span>${loc}</span>
-            </label>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-/** 設定の保存 */
+/** 設定の保存（モーダルを閉じる際などの予備） */
 function saveSettings() {
-    const checkboxes = document.querySelectorAll('#location-settings-list input[type="checkbox"]');
-    favoriteLocations = [];
-    checkboxes.forEach(cb => {
-        if (cb.checked) {
-            favoriteLocations.push(cb.value);
-        }
-    });
-    saveFavorites();
+    // 個別の toggleFavorite で保存しているため、ここではリストの同期のみ確認
+    saveLocations();
     renderLocationOptions();
     toggleSettingsModal(false);
 }
+
+// Global scope exposure for HTML attributes
+window.deleteLocation = deleteLocation;
+window.toggleFavorite = toggleFavorite;
+window.addLocation = addLocation;
+
+
 
 // --------------------------------------------------
 //  履歴 (Presets) 機能
@@ -853,9 +918,10 @@ function updateCurrentPresetLabel(name) {
 function exportSettingsAsJson() {
     const data = {
         type: 'attendance_config',
+        masterLocations: masterLocationList,
         favorites: favoriteLocations,
         presets: presets,
-        version: '1.0'
+        version: '1.1'
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -892,11 +958,16 @@ async function importSettingsAsJson(e) {
                 return;
             }
 
+            if (data.masterLocations) {
+                masterLocationList = data.masterLocations;
+            }
             if (data.favorites) {
                 favoriteLocations = data.favorites;
-                saveFavorites();
-                renderLocationOptions();
             }
+            saveLocations();
+            renderSettingsCheckboxes();
+            renderLocationOptions();
+
             if (data.presets) {
                 presets = data.presets;
                 savePresets();
@@ -988,9 +1059,10 @@ function applyDefaults() {
 // 初期化時に読み込み
 window.addEventListener('DOMContentLoaded', () => {
     loadDefaults(); // デフォルト設定読み込み (変数への反映)
-    loadFavorites();
-    renderLocationOptions();
+    loadLocations(); // マスター場所リストを読み込み
+    renderLocationOptions(); // 場所選択ドロップダウンを初期化
     applyDefaults(); // 読み込んだデフォルト値をDOMに反映
+    calcOvertime(); // 初期表示時に残業時間を計算
 
     // プリセット初期化
     loadPresets();
@@ -1184,8 +1256,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
 
                     if (newLocations.length > 0) {
-                        favoriteLocations = [...new Set(newLocations)];
-                        saveFavorites();
+                        // マスターリストに追加（重複排除）
+                        masterLocationList = [...new Set([...masterLocationList, ...newLocations])];
+                        saveLocations();
+                        renderSettingsCheckboxes();
                         renderLocationOptions();
                         alert('CSVから場所リストを一括登録しました。');
                     } else {
@@ -1201,7 +1275,20 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Event Listeners for Location Management
+    const btnAddLoc = document.getElementById('btn-add-location');
+    if (btnAddLoc) {
+        btnAddLoc.addEventListener('click', addLocation);
+    }
+    const inputAddLoc = document.getElementById('input-add-location');
+    if (inputAddLoc) {
+        inputAddLoc.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addLocation();
+        });
+    }
+
     generateReport();
     calcOvertime();
     updateReminders();
 });
+
