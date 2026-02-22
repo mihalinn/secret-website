@@ -441,6 +441,8 @@ async function deleteItem(storageKey, index, renderFunc) {
 // Event Listeners
 // ------------------------------------------------------------------
 function setupEventListeners() {
+    const varAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
     // Date change -> load data for that date or reset
     document.getElementById('report-date').addEventListener('change', (e) => {
         updateDayOfWeek();
@@ -462,6 +464,9 @@ function setupEventListeners() {
         if (e.target.id === 'settings-modal') closeSettingsModal();
     });
 
+    document.getElementById('btn-close-qr').addEventListener('click', () => {
+        document.getElementById('qr-modal').style.display = 'none';
+    });
     document.getElementById('qr-modal').addEventListener('click', (e) => {
         if (e.target.id === 'qr-modal') document.getElementById('qr-modal').style.display = 'none';
     });
@@ -555,10 +560,10 @@ function setupEventListeners() {
             if (target) {
                 if (target.style.display === 'none') {
                     target.style.display = 'block';
-                    btn.innerHTML = '&#9650; 閉じる';
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="18 15 12 9 6 15"></polyline></svg> 閉じる';
                 } else {
                     target.style.display = 'none';
-                    btn.innerHTML = '&#9660; 開く';
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="6 9 12 15 18 9"></polyline></svg> 開く';
                 }
             }
         });
@@ -600,6 +605,146 @@ function setupEventListeners() {
 
     // Send Button
     document.getElementById('btn-send-gas').addEventListener('click', sendReport);
+
+    // Export JSON
+    // This was already handled by the 'JSON Save (Developer Tool)' section above.
+    // The instruction seems to imply it should be here, but it's a duplicate.
+    // Keeping the original placement and adding the import logic.
+
+    // Import JSON
+    const btnImport = document.getElementById('btn-import-config');
+    const inputImport = document.getElementById('input-import-config');
+
+    if (btnImport && inputImport) { // Added check for existence
+        btnImport.addEventListener('click', () => {
+            inputImport.click();
+        });
+
+        inputImport.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const confirmed = await showActionConfirm({
+                title: '設定のインポート',
+                message: '選択した設定ファイルを読み込みますか？現在の運転者・確認者・車両リストは上書きされます。',
+                btnText: '読み込む',
+                btnColor: varAccent // Assuming varAccent is defined globally or accessible
+            });
+
+            if (!confirmed) {
+                inputImport.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    let importedCount = 0;
+
+                    // Import lists if present
+                    if (Array.isArray(data.drivers)) {
+                        localStorage.setItem(DRIVER_LIST_KEY, JSON.stringify(data.drivers));
+                        renderDriverList();
+                        importedCount++;
+                    }
+                    if (Array.isArray(data.checkers)) {
+                        localStorage.setItem(CHECKER_LIST_KEY, JSON.stringify(data.checkers));
+                        renderCheckerList();
+                        importedCount++;
+                    }
+                    if (Array.isArray(data.vehicles)) {
+                        localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(data.vehicles));
+                        renderVehicleList();
+                        importedCount++;
+                    }
+
+                    if (importedCount > 0) {
+                        alert('設定を正常にインポートしました。');
+                    } else {
+                        alert('有効な設定データが見つかりませんでした。');
+                    }
+                } catch (err) {
+                    console.error('Import error:', err);
+                    alert('ファイルの読み込みに失敗しました。有効なJSONファイルか確認してください。');
+                }
+                inputImport.value = '';
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    // CSV Import
+    const btnImportCsv = document.getElementById('btn-import-csv');
+    const inputImportCsv = document.getElementById('input-import-csv');
+
+    if (btnImportCsv && inputImportCsv) {
+        btnImportCsv.addEventListener('click', () => inputImportCsv.click());
+        inputImportCsv.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const confirmed = await showActionConfirm({
+                title: 'マスターデータ一括登録',
+                message: 'CSVファイルを読み込んでリストを更新しますか？現在のデータは上書きされます。',
+                btnText: '一括登録',
+                btnColor: varAccent
+            });
+
+            if (!confirmed) {
+                inputImportCsv.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const text = event.target.result;
+                    const rows = parseCSV(text);
+
+                    if (rows.length < 2) {
+                        alert('CSVファイルの中身が足りません（ヘッダー + データ1行以上必要です）。');
+                        return;
+                    }
+
+                    const drivers = [];
+                    const checkers = [];
+                    const vehicles = [];
+
+                    // 2行目から読み込み (インデックス1〜)
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row[0]) drivers.push(row[0].trim());
+                        if (row[1]) checkers.push(row[1].trim());
+                        if (row[2]) vehicles.push(row[2].trim());
+                    }
+
+                    // 重複削除 & 保存
+                    if (drivers.length > 0) {
+                        localStorage.setItem(DRIVER_LIST_KEY, JSON.stringify([...new Set(drivers)]));
+                        renderDriverList();
+                    }
+                    if (checkers.length > 0) {
+                        localStorage.setItem(CHECKER_LIST_KEY, JSON.stringify([...new Set(checkers)]));
+                        renderCheckerList();
+                    }
+                    if (vehicles.length > 0) {
+                        localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify([...new Set(vehicles)]));
+                        renderVehicleList();
+                    }
+
+                    // 全体のプルダウンとリストを再読み込み
+                    initDropdowns();
+                    alert('CSVからマスタデータをインポートしました。');
+                } catch (err) {
+                    console.error('CSV Import error:', err);
+                    alert('ファイルの解析に失敗しました。');
+                }
+                inputImportCsv.value = '';
+            };
+            reader.readAsText(file);
+        });
+    }
 
     // Reset Button (Unified Popup)
     const btnReset = document.getElementById('btn-reset');

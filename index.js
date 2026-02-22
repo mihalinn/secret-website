@@ -831,7 +831,9 @@ function renderHistoryList() {
                 <div class="history-info">${p.name}</div>
                 <div class="history-actions">
                     <button class="btn-apply-history" onclick="applyPreset(${index})">適用</button>
-                    <button class="btn-delete-history" onclick="deletePreset(${index})">削除</button>
+                    <button class="btn-delete-history" onclick="deletePreset(${index})" title="削除">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                 </div>
             </div>
         `;
@@ -847,9 +849,69 @@ function updateCurrentPresetLabel(name) {
     }
 }
 
-// Global scope no longer needed but kept for safety if needed elsewhere
+/** 設定をJSONとしてエクスポート */
+function exportSettingsAsJson() {
+    const data = {
+        type: 'attendance_config',
+        favorites: favoriteLocations,
+        presets: presets,
+        version: '1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_settings_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Global scope expose if needed
 window.applyPreset = applyPreset;
 window.deletePreset = deletePreset;
+window.exportSettingsAsJson = exportSettingsAsJson;
+
+/** 設定をJSONからインポート */
+async function importSettingsAsJson(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 基本的にみんなが使う機能なので、確認ダイアログを表示
+    if (!confirm('設定ファイルを読み込みますか？現在のお気に入り場所や履歴が上書きされます。')) {
+        e.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.type !== 'attendance_config') {
+                alert('有効な勤怠詳細設定ファイルではありません。');
+                return;
+            }
+
+            if (data.favorites) {
+                favoriteLocations = data.favorites;
+                saveFavorites();
+                renderLocationOptions();
+            }
+            if (data.presets) {
+                presets = data.presets;
+                savePresets();
+                renderPresetMenu();
+            }
+
+            alert('設定をインポートしました。');
+        } catch (err) {
+            console.error('Import error:', err);
+            alert('ファイルの読み込みに失敗しました。');
+        }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+}
 
 // ドロップダウン開閉制御 & イベント委譲
 function initPresetDropdown() {
@@ -1072,6 +1134,70 @@ window.addEventListener('DOMContentLoaded', () => {
     if (historyModal) {
         historyModal.addEventListener('click', (e) => {
             if (e.target === historyModal) closeHistoryModal();
+        });
+    }
+
+    // 設定のインポート・エクスポート
+    const btnExport = document.getElementById('btn-save-json');
+    if (btnExport) {
+        btnExport.addEventListener('click', exportSettingsAsJson);
+    }
+
+    const btnImport = document.getElementById('btn-import-config');
+    const inputImport = document.getElementById('input-import-config');
+    if (btnImport && inputImport) {
+        btnImport.addEventListener('click', () => inputImport.click());
+        inputImport.addEventListener('change', importSettingsAsJson);
+    }
+
+    // CSV Import (Locations)
+    const btnImportCsv = document.getElementById('btn-import-csv');
+    const inputImportCsv = document.getElementById('input-import-csv');
+    if (btnImportCsv && inputImportCsv) {
+        btnImportCsv.addEventListener('click', () => inputImportCsv.click());
+        inputImportCsv.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!confirm('CSVファイルを読み込んで場所リストを一括登録しますか？既存のリストは上書きされます。')) {
+                inputImportCsv.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const text = event.target.result;
+                    const rows = parseCSV(text);
+                    if (rows.length < 2) {
+                        alert('CSVファイルの中身が足りません（ヘッダー + データ1行以上必要です）。');
+                        return;
+                    }
+
+                    const newLocations = [];
+                    // 2行目から読み込み
+                    for (let i = 1; i < rows.length; i++) {
+                        const loc = rows[i][0];
+                        if (loc && loc.trim()) {
+                            newLocations.push(loc.trim());
+                        }
+                    }
+
+                    if (newLocations.length > 0) {
+                        favoriteLocations = [...new Set(newLocations)];
+                        saveFavorites();
+                        renderLocationOptions();
+                        alert('CSVから場所リストを一括登録しました。');
+                    } else {
+                        alert('有効なデータが見つかりませんでした。');
+                    }
+                } catch (err) {
+                    console.error('CSV Import error:', err);
+                    alert('ファイルの解析に失敗しました。');
+                }
+                inputImportCsv.value = '';
+            };
+            reader.readAsText(file);
         });
     }
 

@@ -475,6 +475,7 @@ select {
     max-width: 500px;
     max-height: 90vh;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
 [data-theme="light"] .modal-card {
@@ -519,6 +520,7 @@ select {
 
 .modal-body {
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
     margin-bottom: 1rem;
 }
@@ -535,8 +537,6 @@ select {
     gap: 0.5rem;
     max-height: 320px;
     overflow-y: auto;
-    padding-right: 4px;
-    margin-right: -4px;
 }
 
 .list-edit-container::-webkit-scrollbar {
