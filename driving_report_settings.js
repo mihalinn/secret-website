@@ -231,11 +231,19 @@ function showQRModal(vehicleName) {
     const qrUrl = `${window.location.origin}${window.location.pathname}?vehicle=${encodeURIComponent(vehicleName)}`;
     if (urlDisplay) urlDisplay.value = qrUrl;
 
-    new QRCode(container, {
-        text: qrUrl,
-        width: 256,
-        height: 256
-    });
+    console.log('[QR] Generating URL (length:', qrUrl.length, '):', qrUrl);
+
+    try {
+        new QRCode(container, {
+            text: qrUrl,
+            width: 256,
+            height: 256,
+            correctLevel: QRCode.CorrectLevel.L // 容量を最大化するためにLに設定
+        });
+    } catch (e) {
+        console.error('[QR] Error generating QR code:', e);
+        container.innerHTML = '<p style="color:red;font-size:0.8rem;">QRコード生成失敗。URLが長すぎます。</p>';
+    }
 
     modal.style.display = 'flex';
 }
