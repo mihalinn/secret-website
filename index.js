@@ -622,12 +622,12 @@ function renderSettingsCheckboxes() {
     [...masterLocationList].sort().forEach(loc => {
         const isFav = favoriteLocations.includes(loc);
         html += `
-            <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+            <div class="setting-item">
+                <label>
                     <input type="checkbox" value="${loc}" ${isFav ? 'checked' : ''} onchange="toggleFavorite('${loc.replace(/'/g, "\\'")}', this.checked)">
                     <span>${loc}</span>
                 </label>
-                <button onclick="deleteLocation('${loc.replace(/'/g, "\\'")}')" style="background: transparent; border: none; color: #f87171; cursor: pointer; padding: 4px; display: flex; align-items: center;" title="削除">
+                <button class="btn-delete-item" onclick="deleteLocation('${loc.replace(/'/g, "\\'")}')" title="削除">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
             </div>
@@ -635,6 +635,7 @@ function renderSettingsCheckboxes() {
     });
     container.innerHTML = html;
 }
+
 
 /** お気に入りの切り替え (チェックボックス用) */
 function toggleFavorite(loc, isFav) {
