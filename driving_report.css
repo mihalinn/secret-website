@@ -865,6 +865,79 @@ select {
     background: rgba(0, 0, 0, 0.02);
 }
 
+/* --------------------------------------------------
+   QR Scanner Styles
+   -------------------------------------------------- */
+.btn-icon-text-small {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon-text-small:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.btn-icon-text-small svg {
+    width: 14px;
+    height: 14px;
+}
+
+#qr-reader-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    border: 1px solid var(--glass-border);
+}
+
+#qr-reader {
+    width: 100% !important;
+    border: none !important;
+}
+
+/* Hide html5-qrcode's internal UI elements if any appear */
+#qr-reader img {
+    display: none !important;
+}
+
+#qr-reader__dashboard {
+    display: none !important;
+}
+
+#qr-reader__scan_region {
+    background: transparent !important;
+}
+
+.qr-status {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    #qr-reader-container {
+        max-width: 100%;
+    }
+}
+
+
 [data-theme="light"] .btn-action-ghost {
     background: #f8fafc;
     border-color: #e2e8f0;

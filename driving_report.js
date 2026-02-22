@@ -10,6 +10,8 @@ const LAST_CHECKER_POST_KEY = 'driving_report_last_checker_post';
 const HISTORY_KEY = 'driving_report_history';
 const PASSCODE_KEY = 'driving_report_passcode';
 
+let html5QrCode = null;
+
 const DEFAULT_DRIVERS = ['(設定から名前を追加してください)'];
 const DEFAULT_VEHICLES = ['(設定から車両名を追加してください)'];
 const DEFAULT_CHECKERS = ['(設定から確認者名を追加してください)'];
@@ -96,6 +98,96 @@ function initDropdowns() {
     // Post checker defaults to Pre checker if not set? No, let's load last used.
     const lastPostChecker = localStorage.getItem(LAST_CHECKER_POST_KEY);
     if (lastPostChecker) document.getElementById('post-checker').value = lastPostChecker;
+}
+
+/** QRスキャナーを開始 */
+function startQrScanner() {
+    const modal = document.getElementById('qr-scan-modal');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.body.classList.add('no-scroll');
+    const statusEl = document.getElementById('qr-status');
+    statusEl.textContent = 'カメラを起動しています...';
+    statusEl.style.color = 'var(--text-secondary)';
+
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("qr-reader");
+    }
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+            // Success
+            console.log(`QR Scanned: ${decodedText}`);
+            handleScannedQr(decodedText);
+        },
+        (errorMessage) => {
+            // parse error, ignore
+        }
+    ).catch((err) => {
+        console.error("Unable to start scanning", err);
+        statusEl.textContent = 'カメラの起動に失敗しました。権限を許可してください。';
+        statusEl.style.color = '#f87171';
+    });
+}
+
+/** QRスキャナーを停止・モーダルを閉じる */
+function stopQrScanner() {
+    const modal = document.getElementById('qr-scan-modal');
+    if (!modal) return;
+
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => {
+            modal.style.display = 'none';
+            document.body.classList.remove('no-scroll');
+        }).catch(err => {
+            console.error("Unable to stop scanning", err);
+            modal.style.display = 'none';
+            document.body.classList.remove('no-scroll');
+        });
+    } else {
+        modal.style.display = 'none';
+        document.body.classList.remove('no-scroll');
+    }
+}
+
+/** スキャンされた結果を解析して適用 */
+function handleScannedQr(decodedText) {
+    let vehicle = null;
+    try {
+        // Expected format: https://.../driving_report.html?vehicle=VehicleName
+        const url = new URL(decodedText);
+        vehicle = url.searchParams.get('vehicle');
+    } catch (e) {
+        // Not a URL? Maybe it's just the vehicle name string
+        vehicle = decodedText;
+    }
+
+    if (vehicle) {
+        const select = document.getElementById('vehicle-id');
+        const options = Array.from(select.options).map(opt => opt.value);
+
+        if (options.includes(vehicle)) {
+            select.value = vehicle;
+            localStorage.setItem(LAST_VEHICLE_KEY, vehicle);
+
+            // UI feedback
+            const statusEl = document.getElementById('qr-status');
+            statusEl.textContent = `「${vehicle}」を選択しました！`;
+            statusEl.style.color = '#34d399';
+
+            // Close after a short delay
+            setTimeout(stopQrScanner, 800);
+        } else {
+            const statusEl = document.getElementById('qr-status');
+            statusEl.textContent = `車両「${vehicle}」がリストに見つかりません。`;
+            statusEl.style.color = '#f87171';
+        }
+    }
 }
 
 /** URLパラメータ（QRコード等）の処理 */
@@ -424,11 +516,15 @@ function setupEventListeners() {
         if (e.target.id === 'settings-modal') closeSettingsModal();
     });
 
-    document.getElementById('btn-close-qr').addEventListener('click', () => {
-        document.getElementById('qr-modal').style.display = 'none';
-    });
-    document.getElementById('qr-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'qr-modal') document.getElementById('qr-modal').style.display = 'none';
+    // QR Scan Modal
+    const btnScanVehicle = document.getElementById('btn-scan-vehicle');
+    if (btnScanVehicle) {
+        btnScanVehicle.addEventListener('click', startQrScanner);
+    }
+    document.getElementById('btn-close-qr-modal').addEventListener('click', stopQrScanner);
+    document.getElementById('btn-cancel-qr').addEventListener('click', stopQrScanner);
+    document.getElementById('qr-scan-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'qr-scan-modal') stopQrScanner();
     });
 
     // Action Confirm Modal event listeners are now handled in common.js (auto-injection)
