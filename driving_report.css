@@ -1,3 +1,26 @@
+/* Custom Scrollbar for all scrollable elements */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.no-scroll {
+    overflow: hidden !important;
+}
+
 /* Driving Report Specific Styles */
 
 .wide-layout {
@@ -476,6 +499,8 @@ select {
     max-height: 90vh;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 [data-theme="light"] .modal-card {
@@ -490,6 +515,7 @@ select {
     margin-bottom: 1rem;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.8rem;
+    flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -523,6 +549,7 @@ select {
     overflow-x: hidden;
     flex: 1;
     margin-bottom: 1rem;
+    overscroll-behavior: contain;
 }
 
 .modal-desc {
@@ -682,6 +709,7 @@ select {
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0px;
     overflow-x: auto;
+    flex-shrink: 0;
 }
 
 .tab-btn {
@@ -712,6 +740,132 @@ select {
     animation: fadeIn 0.2s ease;
 }
 
+
 .tab-content.active {
     display: block;
+}
+
+/* --------------------------------------------------
+   Settings UI Enhancements (Unified & Premium)
+   -------------------------------------------------- */
+.setting-group {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.setting-group:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.setting-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+}
+
+.setting-group-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 1.2rem;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+.setting-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.setting-input-wrapper {
+    margin-bottom: 1rem;
+}
+
+.setting-input-wrapper:last-child {
+    margin-bottom: 0;
+}
+
+/* Action Buttons for Settings */
+.btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 1rem;
+}
+
+.btn-action-accent {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-action-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-action-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-action-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-secondary);
+}
+
+.link-button {
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.link-button:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+[data-theme="light"] .setting-group {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .btn-action-ghost {
+    background: #f8fafc;
+    border-color: #e2e8f0;
 }

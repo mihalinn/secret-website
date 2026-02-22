@@ -1,3 +1,26 @@
+/* Custom Scrollbar for all scrollable elements */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.no-scroll {
+    overflow: hidden !important;
+}
+
 /* ============================================================
    勤怠詳細作成ツール - attendance.css
    ============================================================ */
@@ -555,6 +578,7 @@ input[type="time"] {
     flex-grow: 1;
     overflow-y: auto;
     padding-right: 0.5rem;
+    overscroll-behavior: contain;
 }
 
 .modal-desc {
@@ -931,4 +955,87 @@ select option {
 
 .preset-more:hover {
     background: rgba(56, 189, 248, 0.15);
+}
+
+/* --------------------------------------------------
+   Settings Modal Tabs & Categorization
+   -------------------------------------------------- */
+.modal-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Styled Setting Groups */
+.setting-group {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.setting-group:last-child {
+    margin-bottom: 0;
+}
+
+.setting-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+}
+
+.setting-group-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 1.2rem;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+[data-theme="light"] .modal-tabs {
+    background: rgba(0, 0, 0, 0.01);
+}
+
+[data-theme="light"] .setting-group {
+    background: rgba(0, 0, 0, 0.02);
 }

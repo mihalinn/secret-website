@@ -437,12 +437,22 @@ function copyText(el) {
 // --------------------------------------------------
 //  リセット
 // --------------------------------------------------
-function resetAll() {
+/** リセット */
+async function resetAll() {
+    const ok = await showActionConfirm({
+        title: 'リセットの確認',
+        message: 'すべての入力内容をデフォルト値に戻しますか？',
+        btnText: 'リセット'
+    });
+    if (!ok) return;
+
     for (const [id, value] of Object.entries(DEFAULTS)) {
-        document.getElementById(id).value = value;
+        const el = document.getElementById(id);
+        if (el) el.value = value;
     }
     generateReport();
 }
+
 
 
 
@@ -594,8 +604,15 @@ function addLocation() {
 }
 
 /** 場所の削除 */
-function deleteLocation(loc) {
-    if (!confirm(`「${loc}」を削除してもよろしいですか？`)) return;
+async function deleteLocation(loc) {
+    const ok = await showActionConfirm({
+        title: '場所の削除',
+        message: `「${loc}」を削除してもよろしいですか？`,
+        btnText: '削除',
+        btnColor: '#f87171'
+    });
+    if (!ok) return;
+
 
     // マスターリストから削除
     masterLocationList = masterLocationList.filter(l => l !== loc);
@@ -654,8 +671,24 @@ function toggleSettingsModal(show) {
     if (!modal) return;
     modal.style.display = show ? 'flex' : 'none';
     if (show) {
+        document.body.classList.add('no-scroll');
+        switchSettingTab('location'); // Default tab
         renderSettingsCheckboxes();
+    } else {
+        document.body.classList.remove('no-scroll');
     }
+}
+
+/** 設定モーダルのタブ切り替え */
+function switchSettingTab(tabName) {
+    // ボタンのactive切り替え
+    document.querySelectorAll('#settings-modal .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
+    });
+    // コンテンツの表示切り替え
+    document.querySelectorAll('#settings-modal .tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `tab-${tabName}`);
+    });
 }
 
 /** 設定の保存（モーダルを閉じる際などの予備） */
@@ -869,6 +902,7 @@ function openHistoryModal() {
     const modal = document.getElementById('history-modal');
     if (modal) {
         modal.style.display = 'flex';
+        document.body.classList.add('no-scroll');
     }
 }
 
@@ -877,6 +911,7 @@ function closeHistoryModal() {
     const modal = document.getElementById('history-modal');
     if (modal) {
         modal.style.display = 'none';
+        document.body.classList.remove('no-scroll');
     }
 }
 
@@ -1166,6 +1201,14 @@ window.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', saveSettings);
     }
 
+    // 設定タブ切り替え
+    document.querySelectorAll('#settings-modal .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.getAttribute('data-tab');
+            switchSettingTab(tabName);
+        });
+    });
+
     // デフォルト保存ボタン
     const saveDefaultBtn = document.getElementById('btn-save-default');
     if (saveDefaultBtn) {
@@ -1232,23 +1275,18 @@ window.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             if (!file) return;
 
-            if (!confirm('CSVファイルを読み込んで場所リストを一括登録しますか？既存のリストは上書きされます。')) {
-                inputImportCsv.value = '';
-                return;
-            }
-
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const text = event.target.result;
                     const rows = parseCSV(text);
                     if (rows.length < 2) {
                         alert('CSVファイルの中身が足りません（ヘッダー + データ1行以上必要です）。');
+                        inputImportCsv.value = '';
                         return;
                     }
 
                     const newLocations = [];
-                    // 2行目から読み込み
                     for (let i = 1; i < rows.length; i++) {
                         const loc = rows[i][0];
                         if (loc && loc.trim()) {
@@ -1257,12 +1295,18 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
 
                     if (newLocations.length > 0) {
-                        // マスターリストに追加（重複排除）
-                        masterLocationList = [...new Set([...masterLocationList, ...newLocations])];
-                        saveLocations();
-                        renderSettingsCheckboxes();
-                        renderLocationOptions();
-                        alert('CSVから場所リストを一括登録しました。');
+                        const ok = await showActionConfirm({
+                            title: 'インポートの確認',
+                            message: `${newLocations.length}件の場所が見つかりました。現在のリストを上書きして登録してもよろしいですか？`,
+                            btnText: 'インポート実行'
+                        });
+
+                        if (ok) {
+                            masterLocationList = newLocations;
+                            saveLocations();
+                            renderSettingsCheckboxes();
+                            renderLocationOptions();
+                        }
                     } else {
                         alert('有効なデータが見つかりませんでした。');
                     }
@@ -1274,6 +1318,7 @@ window.addEventListener('DOMContentLoaded', () => {
             };
             reader.readAsText(file);
         });
+
     }
 
     // Event Listeners for Location Management

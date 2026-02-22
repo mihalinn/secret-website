@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDate();
     loadSettings();
     initDropdowns(); // Load lists
-    initTheme(); // Initialize Theme
+    // Theme is handled in common.js
     setupEventListeners();
 
     // Attempt to load autosaved data LAST (to overwrite defaults)
@@ -144,38 +144,8 @@ function updateDropdownOptions(storageKey, elementIds, defaultList) {
 // ------------------------------------------------------------------
 // Theme Handling
 // ------------------------------------------------------------------
-function initTheme() {
-    const savedTheme = localStorage.getItem(THEME_KEY);
-    if (savedTheme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        updateThemeIcon(true);
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        updateThemeIcon(false);
-    }
-}
+// Theme handling is now centralized in common.js
 
-function toggleTheme() {
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    if (isLight) {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem(THEME_KEY, 'dark');
-        updateThemeIcon(false);
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem(THEME_KEY, 'light');
-        updateThemeIcon(true);
-    }
-}
-
-function updateThemeIcon(isLight) {
-    const btn = document.getElementById('theme-btn');
-    if (btn) {
-        // Light Mode -> Show Moon (to switch to Dark)
-        // Dark Mode  -> Show Sun  (to switch to Light)
-        btn.innerHTML = isLight ? '&#9790;' : '&#9728;';
-    }
-}
 
 // ------------------------------------------------------------------
 // Unified Settings Modal
@@ -183,6 +153,7 @@ function updateThemeIcon(isLight) {
 function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     modal.style.display = 'flex';
+    document.body.classList.add('no-scroll');
 
     // Default tab
     switchTab('driver');
@@ -203,6 +174,7 @@ function openSettingsModal() {
 
 function closeSettingsModal() {
     document.getElementById('settings-modal').style.display = 'none';
+    document.body.classList.remove('no-scroll');
     // Init Dropdowns again to reflect changes
     initDropdowns();
 }
@@ -226,6 +198,7 @@ function switchTab(tabName) {
         }
     });
 }
+window.switchTab = switchTab;
 
 // ---- Render Lists ----
 function renderDriverList() {
@@ -368,36 +341,7 @@ function printQRCode() {
 }
 
 // ------------------------------------------------------------------
-// Custom Confirmation Modal
-// ------------------------------------------------------------------
-let currentConfirmResolve = null;
 
-function showActionConfirm(options) {
-    const { title, message, btnText, btnColor } = options;
-    const modal = document.getElementById('action-confirm-modal');
-    const titleEl = document.getElementById('action-confirm-title');
-    const msgEl = document.getElementById('action-confirm-message');
-    const executeBtn = document.getElementById('btn-action-execute');
-
-    titleEl.textContent = title || '確認';
-    msgEl.textContent = message || '実行しますか？';
-    executeBtn.textContent = btnText || '実行';
-    executeBtn.style.background = btnColor || ''; // Reset or set
-
-    modal.style.display = 'flex';
-
-    return new Promise((resolve) => {
-        currentConfirmResolve = resolve;
-    });
-}
-
-function closeActionConfirm(result) {
-    document.getElementById('action-confirm-modal').style.display = 'none';
-    if (currentConfirmResolve) {
-        currentConfirmResolve(result);
-        currentConfirmResolve = null;
-    }
-}
 
 // ---- Add/Delete Logic ----
 function addItem(storageKey, inputId, renderFunc) {
@@ -471,12 +415,8 @@ function setupEventListeners() {
         if (e.target.id === 'qr-modal') document.getElementById('qr-modal').style.display = 'none';
     });
 
-    // Action Confirm Modal
-    document.getElementById('btn-action-cancel').addEventListener('click', () => closeActionConfirm(false));
-    document.getElementById('btn-action-execute').addEventListener('click', () => closeActionConfirm(true));
-    document.getElementById('action-confirm-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'action-confirm-modal') closeActionConfirm(false);
-    });
+    // Action Confirm Modal event listeners are now handled in common.js (auto-injection)
+
 
     document.getElementById('btn-print-qr').addEventListener('click', printQRCode);
 
@@ -684,26 +624,15 @@ function setupEventListeners() {
             const file = e.target.files[0];
             if (!file) return;
 
-            const confirmed = await showActionConfirm({
-                title: 'マスターデータ一括登録',
-                message: 'CSVファイルを読み込んでリストを更新しますか？現在のデータは上書きされます。',
-                btnText: '一括登録',
-                btnColor: varAccent
-            });
-
-            if (!confirmed) {
-                inputImportCsv.value = '';
-                return;
-            }
-
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const text = event.target.result;
                     const rows = parseCSV(text);
 
                     if (rows.length < 2) {
                         alert('CSVファイルの中身が足りません（ヘッダー + データ1行以上必要です）。');
+                        inputImportCsv.value = '';
                         return;
                     }
 
@@ -714,28 +643,42 @@ function setupEventListeners() {
                     // 2行目から読み込み (インデックス1〜)
                     for (let i = 1; i < rows.length; i++) {
                         const row = rows[i];
-                        if (row[0]) drivers.push(row[0].trim());
-                        if (row[1]) checkers.push(row[1].trim());
-                        if (row[2]) vehicles.push(row[2].trim());
+                        if (row[0] && row[0].trim()) drivers.push(row[0].trim());
+                        if (row[1] && row[1].trim()) checkers.push(row[1].trim());
+                        if (row[2] && row[2].trim()) vehicles.push(row[2].trim());
                     }
 
-                    // 重複削除 & 保存
-                    if (drivers.length > 0) {
-                        localStorage.setItem(DRIVER_LIST_KEY, JSON.stringify([...new Set(drivers)]));
-                        renderDriverList();
-                    }
-                    if (checkers.length > 0) {
-                        localStorage.setItem(CHECKER_LIST_KEY, JSON.stringify([...new Set(checkers)]));
-                        renderCheckerList();
-                    }
-                    if (vehicles.length > 0) {
-                        localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify([...new Set(vehicles)]));
-                        renderVehicleList();
+                    const uniqueDrivers = [...new Set(drivers)];
+                    const uniqueCheckers = [...new Set(checkers)];
+                    const uniqueVehicles = [...new Set(vehicles)];
+
+                    if (uniqueDrivers.length === 0 && uniqueCheckers.length === 0 && uniqueVehicles.length === 0) {
+                        alert('有効なデータが見つかりませんでした。');
+                        inputImportCsv.value = '';
+                        return;
                     }
 
-                    // 全体のプルダウンとリストを再読み込み
-                    initDropdowns();
-                    alert('CSVからマスタデータをインポートしました。');
+                    const confirmed = await showActionConfirm({
+                        title: 'インポートの確認',
+                        message: `以下のデータが見つかりました。\n\n・運転者: ${uniqueDrivers.length}件\n・確認者: ${uniqueCheckers.length}件\n・車両: ${uniqueVehicles.length}件\n\n現在のマスタリストを上書きして登録してもよろしいですか？`,
+                        btnText: '実行'
+                    });
+
+                    if (confirmed) {
+                        if (uniqueDrivers.length > 0) {
+                            localStorage.setItem(DRIVER_LIST_KEY, JSON.stringify(uniqueDrivers));
+                            renderDriverList();
+                        }
+                        if (uniqueCheckers.length > 0) {
+                            localStorage.setItem(CHECKER_LIST_KEY, JSON.stringify(uniqueCheckers));
+                            renderCheckerList();
+                        }
+                        if (uniqueVehicles.length > 0) {
+                            localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(uniqueVehicles));
+                            renderVehicleList();
+                        }
+                        initDropdowns();
+                    }
                 } catch (err) {
                     console.error('CSV Import error:', err);
                     alert('ファイルの解析に失敗しました。');
@@ -744,6 +687,7 @@ function setupEventListeners() {
             };
             reader.readAsText(file);
         });
+
     }
 
     // Reset Button (Unified Popup)
@@ -751,10 +695,9 @@ function setupEventListeners() {
     if (btnReset) {
         btnReset.addEventListener('click', async () => {
             const confirmed = await showActionConfirm({
-                title: '入力内容のリセット',
-                message: '現在入力中の内容をすべて消去してもよろしいですか？（送信済みのデータは消えません）',
-                btnText: 'リセット',
-                btnColor: '#ef4444'
+                title: 'リセットの確認',
+                message: '入力内容をすべて消去して本日の日付にリセットしますか？',
+                btnText: 'リセット'
             });
             if (confirmed) {
                 resetForm();
