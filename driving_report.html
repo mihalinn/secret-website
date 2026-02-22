@@ -13,6 +13,9 @@
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
 
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="driving_report.css">
 
@@ -94,6 +97,16 @@
                             <select id="vehicle-id" class="input-text">
                                 <option value="">選択してください</option>
                             </select>
+                            <button id="btn-scan-vehicle" class="btn-icon-text-small" title="QRコードで車両を選択">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span>QR</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -663,6 +676,32 @@
                 </div>
 
 
+            </div>
+        </div>
+    </div>
+
+    <!-- QRスキャンモーダル -->
+    <div id="qr-scan-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>車両QRスキャン</h2>
+                <button id="btn-close-qr-modal" class="btn-close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">カメラを車両のQRコードに向けてください。</p>
+                <div id="qr-reader-container">
+                    <div id="qr-reader"></div>
+                </div>
+                <div id="qr-status" class="qr-status">カメラの権限を確認中...</div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-cancel-qr" class="btn-secondary">キャンセル</button>
             </div>
         </div>
     </div>
