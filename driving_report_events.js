@@ -243,4 +243,117 @@ function setupEventListeners() {
             if (confirmed) resetForm();
         });
     }
+
+    // クラウド更新ボタン
+    const btnRefreshCloud = document.getElementById('btn-refresh-cloud');
+    if (btnRefreshCloud) {
+        btnRefreshCloud.addEventListener('click', () => {
+            if (typeof fetchMonthlyData === 'function') fetchMonthlyData();
+        });
+    }
+
+    // クラウド用セレクター変更時に自動更新
+    ['cloud-vehicle-select', 'cloud-year-select', 'cloud-month-select'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                if (typeof fetchMonthlyData === 'function') fetchMonthlyData();
+            });
+        }
+    });
+
+    // 拡大縮小スライダー
+    const zoomRange = document.getElementById('cloud-zoom-range');
+    const zoomVal = document.getElementById('cloud-zoom-val');
+    if (zoomRange && zoomVal) {
+        zoomRange.addEventListener('input', (e) => {
+            const val = e.target.value;
+            zoomVal.textContent = val + '%';
+            applyCloudZoom(val);
+        });
+    }
+
+    // ピンチズーム（二本指操作）
+    const ssWrap = document.getElementById('cloud-ss-wrap');
+    if (ssWrap && zoomRange) {
+        let lastDist = 0;
+        ssWrap.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                lastDist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+            }
+        }, { passive: true });
+
+        ssWrap.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && lastDist > 0) {
+                const dist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                const diff = dist - lastDist;
+                if (Math.abs(diff) > 2) { // 微小な動きは無視
+                    let newVal = parseInt(zoomRange.value, 10) + (diff > 0 ? 2 : -2);
+                    newVal = Math.max(50, Math.min(150, newVal));
+                    zoomRange.value = newVal;
+                    zoomVal.textContent = newVal + '%';
+                    applyCloudZoom(newVal);
+                    lastDist = dist;
+                }
+            }
+        }, { passive: true });
+
+        ssWrap.addEventListener('touchend', () => {
+            lastDist = 0;
+        }, { passive: true });
+    }
+
+    // メインタブ切り替えボタン（設定モーダルの .tab-btn とは別の .main-tab-btn を使用）
+    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchMainTab(btn.getAttribute('data-main-tab'));
+        });
+    });
 }
+
+/**
+ * クラウドテーブルにズームを適用する
+ */
+function applyCloudZoom(percent) {
+    const table = document.querySelector('.crt-table');
+    const scroll = document.querySelector('.crt-scroll');
+    if (!table || !scroll) return;
+
+    const scale = percent / 100;
+    table.classList.add('zoomable');
+    table.style.transform = `scale(${scale})`;
+
+    // スケールに合わせてコンテナの高さを調整（はみ出し防止）
+    const rect = table.getBoundingClientRect();
+    // 実際の内容の高さ = scale前の高さ * scale
+    // 元の高さ = table.offsetHeight
+    scroll.style.paddingBottom = (table.offsetHeight * (scale - 1) > 0) ? (table.offsetHeight * (scale - 1)) + 'px' : '0';
+    // 横幅も同様に調整（スクロール範囲を確保）
+    scroll.style.marginRight = (table.offsetWidth * (scale - 1) > 0) ? (table.offsetWidth * (scale - 1)) + 'px' : '0';
+}
+
+/**
+ * メインコンテンツのタブ切り替え
+ * 設定モーダル用の switchTab() とは別関数
+ */
+function switchMainTab(tabId) {
+    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-main-tab') === tabId);
+    });
+    document.querySelectorAll('.main-tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `main-tab-${tabId}`);
+    });
+
+    // クラウドタブを開いたときは自動で最新データを取得
+    if (tabId === 'cloud' && typeof fetchMonthlyData === 'function') {
+        fetchMonthlyData();
+    }
+}
+
+window.switchMainTab = switchMainTab;

@@ -1053,3 +1053,811 @@ select {
     background: #f8fafc;
     border-color: #e2e8f0;
 }
+
+/* ===================================
+   メインタブ（設定モーダルのtab-btnとは別）
+   =================================== */
+
+.main-tabs-nav {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.2rem;
+    padding: 0.3rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+}
+
+.main-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.8rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+}
+
+.main-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-main);
+}
+
+.main-tab-btn.active {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.35);
+}
+
+.main-tab-content {
+    display: none;
+}
+
+.main-tab-content.active {
+    display: block;
+    animation: mainTabFadeIn 0.3s ease-out;
+}
+
+@keyframes mainTabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   クラウド同期ビュー
+   =================================== */
+
+.cloud-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.cloud-indicator-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+}
+
+.cloud-indicator-wrap.online {
+    color: #10b981;
+}
+
+.cloud-indicator-wrap.offline {
+    color: #ef4444;
+}
+
+.cloud-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+    animation: cloudPulse 2s infinite;
+}
+
+@keyframes cloudPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+.cloud-update-time {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 3px;
+}
+
+.cloud-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.cloud-ss-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
+.cloud-ss-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    min-width: 900px;
+    color: var(--text-main);
+}
+
+.cloud-ss-table th,
+.cloud-ss-table td {
+    border: 1px solid var(--glass-border);
+    padding: 9px 12px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.cloud-ss-table th {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.cloud-ss-table tr:hover td {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.cloud-ss-meter-end {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cloud-ss-driver {
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+/* ===================================
+   クラウド同期 - トリップカード
+   =================================== */
+
+#cloud-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cloud-trip-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.cloud-trip-card:hover {
+    background: rgba(99, 102, 241, 0.07);
+}
+
+.cloud-trip-empty {
+    opacity: 0.35;
+    border-style: dashed;
+}
+
+.cloud-trip-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.cloud-trip-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.cloud-trip-driver {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f1f5f9;
+    flex: 1;
+}
+
+.cloud-trip-return {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cloud-trip-dest {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cloud-trip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 0.8rem;
+}
+
+.cloud-trip-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cloud-trip-cell.cloud-span2 {
+    grid-column: span 2;
+}
+
+.cloud-lbl {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.cloud-val {
+    font-size: 0.9rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.cloud-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+}
+
+.cloud-meter-end {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.cloud-dist {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #a5b4fc;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cloud-alc-ari {
+    display: inline-block;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    padding: 1px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.cloud-alc-nashi {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 1px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.cloud-ok {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.cloud-trip-notes {
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ===================================
+   クラウド同期 - スプレッドシート再現テーブル (crt-)
+   =================================== */
+
+.cloud-ss-wrap {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.crt-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    /* 画面幅を超えて広がらないようにする */
+    box-sizing: border-box !important;
+    /* borderの幅(1px)が原因ではみ出すのを防ぐ */
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    display: block !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    margin: 1.5rem 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.crt-table {
+    width: auto !important;
+    min-width: max-content !important;
+    /* コンテンツ幅に合わせて自然に広げる */
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    /* ブラウザに最適な列幅計算を任せる */
+    font-size: 0.72rem;
+    color: var(--text-main);
+}
+
+.crt-table th,
+.crt-table td {
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    padding: 5px 8px !important;
+    white-space: nowrap !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* ヘッダー */
+.crt-head1 th,
+.crt-head2 th {
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    font-weight: 700;
+    font-size: 0.68rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.crt-th-group {
+    background: rgba(99, 102, 241, 0.18) !important;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.4) !important;
+}
+
+.crt-th-dest {
+    min-width: 180px !important;
+}
+
+.crt-th-notes {
+    min-width: 140px !important;
+}
+
+.crt-th-meter {
+    min-width: 65px !important;
+}
+
+.crt-th-sm {
+    min-width: 70px !important;
+}
+
+.crt-th-xs {
+    min-width: 48px !important;
+}
+
+.crt-th-date,
+.crt-th-day {
+    min-width: 40px !important;
+}
+
+/* データ行 */
+.crt-table tbody tr:hover td {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.crt-td-center {
+    text-align: center !important;
+}
+
+.crt-td-chk {
+    min-width: 20px !important;
+    padding: 5px 1px !important;
+}
+
+/* 日付・曜日セル */
+.crt-td-date {
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: rgba(234, 179, 8, 0.18);
+    color: #fbbf24;
+    min-width: 36px;
+    border-right: 2px solid rgba(234, 179, 8, 0.35);
+    line-height: 1.4;
+}
+
+.crt-td-day {
+    font-weight: 700;
+    font-size: 0.8rem;
+    min-width: 28px;
+}
+
+.crt-day-sub {
+    font-size: 0.65rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+/* 日曜・土曜色 */
+.crt-sun {
+    background: rgba(239, 68, 68, 0.18) !important;
+    color: #f87171 !important;
+}
+
+.crt-sat {
+    background: rgba(59, 130, 246, 0.18) !important;
+    color: #60a5fa !important;
+}
+
+/* テキスト左寄せ列 */
+.crt-td-driver {
+    font-weight: 700;
+    text-align: left;
+    min-width: 56px;
+}
+
+.crt-td-dest {
+    text-align: left;
+    min-width: 100px;
+    color: var(--text-secondary);
+}
+
+.crt-td-notes {
+    text-align: left;
+    min-width: 90px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* 中央寄せ */
+.crt-td-center {
+    text-align: center;
+}
+
+.crt-td-chk {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* メーター列 */
+.crt-td-meter {
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+    min-width: 58px;
+}
+
+/* 終了メーター黄色ハイライト */
+.crt-meter-end {
+    background: rgba(234, 179, 8, 0.22) !important;
+    color: #fbbf24 !important;
+    font-weight: 800;
+    border: 1px solid rgba(234, 179, 8, 0.4) !important;
+}
+
+/* 400km超過行 */
+.crt-over400 td {
+    background: rgba(239, 68, 68, 0.07);
+}
+
+/* 持帰列 */
+.crt-td-return {
+    font-size: 0.78rem;
+}
+
+/* 確認ラベルセル（対面/電話/有/無）- スプレッドシートのラベル列 */
+.crt-lbl {
+    font-size: 0.65rem !important;
+    color: var(--text-secondary);
+    padding: 3px 2px !important;
+    white-space: nowrap !important;
+    min-width: 24px !important;
+    text-align: left !important;
+}
+
+/* クラウド同期タブのヘッダー */
+.cloud-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.cloud-selectors {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.cloud-selectors label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.cloud-select-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cloud-status-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 160px;
+}
+
+.cloud-zoom-control {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.cloud-zoom-control label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.cloud-zoom-control input[type="range"] {
+    width: 120px;
+    height: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+}
+
+.cloud-zoom-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+    transition: transform 0.2s;
+}
+
+.cloud-zoom-control input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.crt-table.zoomable {
+    transform-origin: top left;
+    transition: transform 0.1s ease-out;
+}
+
+.input-text-small {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(99, 102, 241, 0.2) !important;
+    border-radius: 10px !important;
+    padding: 8px 14px !important;
+    color: var(--text-main) !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    outline: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    cursor: pointer;
+}
+
+.input-text-small:hover {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.input-text-small:focus {
+    border-color: var(--accent) !important;
+    background: rgba(15, 23, 42, 0.9) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+}
+
+#cloud-status-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#cloud-status-label::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.4;
+    }
+}
+
+#cloud-last-update {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+#btn-refresh-cloud {
+    padding: 10px 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+#btn-refresh-cloud:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+}
+
+#btn-refresh-cloud svg {
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#btn-refresh-cloud:active svg {
+    transform: rotate(180deg);
+}
+
+/* モバイル向け最適化: クラウド同期ヘッダー */
+@media (max-width: 600px) {
+    .cloud-view-header {
+        padding: 1rem !important;
+        gap: 15px !important;
+        margin-bottom: 1.5rem !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .cloud-selectors {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px 8px !important;
+        width: 100% !important;
+    }
+
+    /* 車両選択は1行丸ごと使う */
+    .cloud-selectors .cloud-select-group:first-child {
+        grid-column: span 2 !important;
+    }
+
+    .cloud-select-group label {
+        margin-bottom: 2px !important;
+        font-size: 0.7rem !important;
+    }
+
+    .input-text-small {
+        padding: 6px 10px !important;
+        font-size: 0.82rem !important;
+        width: 100% !important;
+    }
+
+    .cloud-status-area {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding-top: 10px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+
+    .cloud-zoom-control {
+        align-items: flex-start !important;
+    }
+
+    .cloud-zoom-control input[type="range"] {
+        width: 100% !important;
+    }
+
+    #btn-refresh-cloud {
+        width: 100% !important;
+        justify-content: center !important;
+        margin-top: 5px !important;
+    }
+
+    .cloud-status-badge {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+}
+
+/* ===================================
+   クラウドテーブル: 横スクロール（crt-scroll で制御済み）
+   =================================== */
+
+/* ===== 横スクロール貫通防止の最終兵器 ===== */
+/* テーブルの横幅に引っ張られて、親や祖先要素が広がるのを全階層で強制ブロックします */
+
+.wide-layout,
+.main-tab-content,
+.card,
+.cloud-ss-wrap,
+#cloud-cards-container {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.crt-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}

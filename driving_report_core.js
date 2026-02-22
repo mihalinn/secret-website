@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initDate === 'function') initDate();
     if (typeof loadSettings === 'function') loadSettings();
     if (typeof initDropdowns === 'function') initDropdowns();
+    if (typeof initCloudSelectors === 'function') initCloudSelectors();
     if (typeof setupEventListeners === 'function') setupEventListeners();
 
     // 履歴の読み込み

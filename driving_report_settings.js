@@ -22,8 +22,40 @@ function loadSettings() {
  */
 function initDropdowns() {
     updateDropdownOptions(DRIVER_LIST_KEY, ['driver-name-1', 'driver-name-2', 'driver-name-3'], DEFAULT_DRIVERS);
-    updateDropdownOptions(VEHICLE_LIST_KEY, ['vehicle-id'], DEFAULT_VEHICLES);
+    updateDropdownOptions(VEHICLE_LIST_KEY, ['vehicle-id', 'cloud-vehicle-select'], DEFAULT_VEHICLES);
     updateDropdownOptions(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], DEFAULT_CHECKERS);
+}
+
+/**
+ * クラウド同期用セレクター（年・月）の初期化
+ */
+function initCloudSelectors() {
+    const yearSelect = document.getElementById('cloud-year-select');
+    const monthSelect = document.getElementById('cloud-month-select');
+    if (!yearSelect || !monthSelect) return;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // 年: 今年、去年、一昨年
+    yearSelect.innerHTML = '';
+    for (let y = currentYear; y >= currentYear - 2; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y + '年';
+        yearSelect.appendChild(opt);
+    }
+
+    // 月: 1-12
+    monthSelect.innerHTML = '';
+    for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = String(m).padStart(2, '0');
+        opt.textContent = m + '月';
+        if (m === currentMonth) opt.selected = true;
+        monthSelect.appendChild(opt);
+    }
 }
 
 /**
