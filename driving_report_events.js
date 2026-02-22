@@ -13,6 +13,8 @@ function setupEventListeners() {
             const vehicleId = document.getElementById('vehicle-id').value;
             loadFromHistory(e.target.value, vehicleId);
         }
+        // クラウド同期セレクターを連動
+        syncCloudSelectors();
     });
 
     // 設定・モード関連
@@ -86,6 +88,9 @@ function setupEventListeners() {
             const dateVal = document.getElementById('report-date').value;
             if (typeof loadFromHistory === 'function') loadFromHistory(dateVal, e.target.value);
             if (typeof saveToLocal === 'function') saveToLocal();
+
+            // クラウド同期セレクターを連動
+            syncCloudSelectors();
         });
     }
 
@@ -357,3 +362,29 @@ function switchMainTab(tabId) {
 }
 
 window.switchMainTab = switchMainTab;
+
+/**
+ * 入力フォームの日付・車両をクラウド同期セレクターに同期させ、再取得を行う
+ */
+function syncCloudSelectors() {
+    const reportDate = document.getElementById('report-date').value;
+    const vehicleId = document.getElementById('vehicle-id').value;
+
+    const cloudYear = document.getElementById('cloud-year-select');
+    const cloudMonth = document.getElementById('cloud-month-select');
+    const cloudVehicle = document.getElementById('cloud-vehicle-select');
+
+    if (!reportDate || !cloudYear || !cloudMonth || !cloudVehicle) return;
+
+    const [y, m] = reportDate.split('-');
+
+    // 値を同期（存在する場合のみ）
+    if (Array.from(cloudYear.options).some(o => o.value === y)) cloudYear.value = y;
+    cloudMonth.value = m;
+    if (Array.from(cloudVehicle.options).some(o => o.value === vehicleId)) cloudVehicle.value = vehicleId;
+
+    // クラウドデータの自動取得を実行
+    if (typeof fetchMonthlyData === 'function') {
+        fetchMonthlyData();
+    }
+}

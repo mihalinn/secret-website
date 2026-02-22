@@ -94,3 +94,32 @@ function loadFromHistory(dateStr, vehicleId = '') {
         if (typeof resetFormExceptHeader === 'function') resetFormExceptHeader();
     }
 }
+
+/**
+ * 現在の選択に基づいて履歴を削除
+ */
+function removeFromHistory() {
+    const dateEl = document.getElementById('report-date');
+    const vehicleEl = document.getElementById('vehicle-id');
+    if (!dateEl || !dateEl.value) return;
+
+    const dateStr = dateEl.value;
+    const vehicleId = vehicleEl ? vehicleEl.value : '';
+
+    let history = {};
+    try {
+        const json = localStorage.getItem(HISTORY_KEY);
+        if (json) history = JSON.parse(json);
+    } catch (e) { return; }
+
+    const historyKey = vehicleId ? `${dateStr}_${vehicleId}` : dateStr;
+    if (history[historyKey]) {
+        delete history[historyKey];
+        try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            console.log('[History] Removed entry:', historyKey);
+        } catch (e) { console.error('History remove error', e); }
+    }
+}
+
+window.removeFromHistory = removeFromHistory;

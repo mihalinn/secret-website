@@ -93,9 +93,16 @@ function fillForm(data) {
  * フォームの完全リセット
  */
 function resetForm() {
+    // 1. ローカル履歴を明示的に削除
+    if (typeof removeFromHistory === 'function') removeFromHistory();
+
+    // 2. UIのリセット
     const vehicleEl = document.getElementById('vehicle-id');
     if (vehicleEl) vehicleEl.value = '';
+
     resetFormExceptHeader();
+
+    console.log('[Form] Reset complete (UI & History)');
 }
 
 /**
