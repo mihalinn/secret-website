@@ -606,13 +606,31 @@ function setupEventListeners() {
     if (driverSelect1) {
         driverSelect1.addEventListener('change', (e) => {
             localStorage.setItem(LAST_DRIVER_KEY, e.target.value);
+            saveToLocal(); // Auto-save on driver change
         });
     }
+
+    // Vehicle Change -> Load History & Auto-save
+    const vehicleSelect = document.getElementById('vehicle-id');
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', (e) => {
+            localStorage.setItem(LAST_VEHICLE_KEY, e.target.value);
+            // Load history for this date + vehicle
+            const dateEl = document.getElementById('report-date');
+            if (dateEl && dateEl.value) {
+                loadFromHistory(dateEl.value, e.target.value);
+            }
+            saveToLocal();
+        });
+    }
+
     document.getElementById('pre-checker').addEventListener('change', (e) => {
         localStorage.setItem(LAST_CHECKER_PRE_KEY, e.target.value);
+        saveToLocal();
     });
     document.getElementById('post-checker').addEventListener('change', (e) => {
         localStorage.setItem(LAST_CHECKER_POST_KEY, e.target.value);
+        saveToLocal();
     });
 
     // "Now" buttons
@@ -867,9 +885,11 @@ function saveToLocal() {
 
     // 2. Add current data
     const data = collectReportData();
-    if (!data.date) return; // Should not happen
+    if (!data.date) return;
 
-    history[data.date] = data;
+    // Use [date] as fallback for old data, but prefer [date_vehicleId] for per-vehicle history
+    const historyKey = data.vehicleId ? `${data.date}_${data.vehicleId}` : data.date;
+    history[historyKey] = data;
 
     // 3. Save back
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
@@ -893,12 +913,14 @@ function manualSave() {
 function loadFromLocal() {
     // Initial load: use current date value
     const dateEl = document.getElementById('report-date');
+    const vehicleEl = document.getElementById('vehicle-id');
     if (dateEl && dateEl.value) {
-        loadFromHistory(dateEl.value);
+        const vId = vehicleEl ? vehicleEl.value : '';
+        loadFromHistory(dateEl.value, vId);
     }
 }
 
-function loadFromHistory(dateStr) {
+function loadFromHistory(dateStr, vehicleId = '') {
     if (!dateStr) return;
 
     let history = {};
@@ -907,16 +929,25 @@ function loadFromHistory(dateStr) {
         if (json) history = JSON.parse(json);
     } catch (e) { console.error('History parse error', e); }
 
-    const data = history[dateStr];
+    // If vehicleId is provided, we ONLY want that specific history. No fallback.
+    // If vehicleId is empty, we try the dateStr key (legacy/generic).
+    let data = null;
+    if (vehicleId) {
+        data = history[`${dateStr}_${vehicleId}`];
+    } else {
+        data = history[dateStr];
+    }
 
     if (data) {
         // Data exists -> Fill form
-        console.log(`Loading data for ${dateStr}`);
+        console.log(`Loading data for ${dateStr} (Vehicle: ${vehicleId || 'N/A'})`);
         fillForm(data);
     } else {
-        // No data -> Reset form
-        console.log(`No data for ${dateStr}, resetting form`);
-        resetForm();
+        // No data -> Reset form (keep the date and vehicle selection)
+        console.log(`No data for ${dateStr} ${vehicleId}, resetting form fields`);
+
+        // Reset only the fields, not the date or vehicle selection that triggered the load
+        resetFormExceptHeader();
     }
 }
 
@@ -1024,13 +1055,22 @@ function fillForm(data) {
 }
 
 function resetForm() {
-    // Clear all inputs except Date
+    // Clear all inputs including Vehicle-ID
+    const vehicleEl = document.getElementById('vehicle-id');
+    if (vehicleEl) vehicleEl.value = '';
+    resetFormExceptHeader();
+}
+
+/** 
+ * Resets fields (drivers, times, meters etc) but leaves Date and Vehicle alone.
+ * This is used when switching dates/vehicles to start a fresh report.
+ */
+function resetFormExceptHeader() {
     const setVal = (id, val) => {
         const el = document.getElementById(id);
         if (el) el.value = val;
     };
 
-    setVal('vehicle-id', '');
     setVal('pre-check-time', '');
     setVal('pre-check-method', '対面');
     setVal('pre-checker', '');
@@ -1038,7 +1078,6 @@ function resetForm() {
     document.querySelectorAll('input[name="pre-alcohol"]').forEach(r => r.checked = false);
     // Hide alcohol val input
     document.getElementById('pre-alcohol-val').style.display = 'none';
-
 
     // Rows
     for (let i = 1; i <= 3; i++) {
