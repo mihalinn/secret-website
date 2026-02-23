@@ -1,6 +1,6 @@
 {
-    "name": "勤怠作成",
-    "short_name": "勤怠作成",
+    "name": "運行管理ツール",
+    "short_name": "運行管理",
     "description": "勤怠管理と運行日報の統合ツールスイート",
     "start_url": "./driving_report.html",
     "display": "standalone",
