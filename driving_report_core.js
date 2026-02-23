@@ -17,6 +17,7 @@ const PASSCODE_KEY = 'driving_report_passcode';
 const DEFAULT_VEHICLE_KEY = 'driving_report_default_vehicle';
 const DEFAULT_DRIVER_KEY = 'driving_report_default_driver';
 const LAST_METER_KEY = 'driving_report_last_meter';
+const FAV_CHECKER_KEY = 'driving_report_fav_checkers';
 
 let html5QrCode = null;
 
@@ -38,6 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 履歴の読み込み
     if (typeof loadFromLocal === 'function') loadFromLocal();
 
+    // URLハッシュによる自動起動（#qr-scan があればスキャナー起動）
+    if (window.location.hash === '#qr-scan') {
+        if (typeof startQrScanner === 'function') {
+            setTimeout(startQrScanner, 800); // UIの準備を待つ
+        }
+    }
     // URLパラメータの処理（QRコードからの遷移等）
     if (typeof handleUrlParams === 'function') handleUrlParams();
 });

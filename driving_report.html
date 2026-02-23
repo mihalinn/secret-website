@@ -708,6 +708,43 @@
                         </div>
                     </div>
 
+                    <!-- ショートカット作成 -->
+                    <div class="setting-group">
+                        <div class="setting-group-title">ショートカット作成</div>
+                        <p class="modal-desc">「QRスキャン」を1タップで起動できるショートカットをホーム画面に作成できます</p>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+                            <button class="btn-action-accent" onclick="createQrShortcut()"
+                                style="width:100%; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span>ショートカット作成用のページを開く</span>
+                            </button>
+                            <div class="shortcut-guide"
+                                style="font-size:0.8rem; background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; border:1px solid var(--glass-border);">
+                                <div style="color:var(--accent); font-weight:600; margin-bottom:6px;">作成手順：</div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                                        <span style="opacity:0.6;">1.</span>
+                                        <span>上のボタンを押すと、スキャナーが自動起動するページが開きます</span>
+                                    </div>
+                                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                                        <span style="opacity:0.6;">2.</span>
+                                        <span>ブラウザのメニューから<b>「ホーム画面に追加」</b>を選択します</span>
+                                    </div>
+                                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                                        <span style="opacity:0.6;">3.</span>
+                                        <span>名前を「QRスキャン」等にして保存すれば完了です</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- マスターデータ一括登録 -->
                     <div class="setting-group">
                         <div class="setting-group-title">マスターデータの一括登録</div>

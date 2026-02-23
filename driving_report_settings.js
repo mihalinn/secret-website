@@ -100,7 +100,39 @@ window.switchTab = switchTab;
  * 各種リストの描画
  */
 function renderDriverList() { renderListGeneric(DRIVER_LIST_KEY, 'driver-list-container', renderDriverList); }
-function renderCheckerList() { renderListGeneric(CHECKER_LIST_KEY, 'checker-list-container', renderCheckerList); }
+function renderCheckerList() {
+    const container = document.getElementById('checker-list-container');
+    if (!container) return;
+
+    let items = [];
+    try {
+        const json = localStorage.getItem(CHECKER_LIST_KEY);
+        if (json) items = JSON.parse(json);
+    } catch (e) { return; }
+
+    const favs = getFavCheckers();
+    container.innerHTML = '';
+
+    items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const isFav = favs.includes(item);
+
+        const deleteIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+
+        div.innerHTML = `
+            <span>${item}</span>
+            <div class="item-actions">
+                <button class="btn-fav-small ${isFav ? 'fav-active' : ''}" onclick="toggleFavChecker('${item}')" title="お気に入り">★</button>
+                <button class="btn-delete" onclick="deleteItem('${CHECKER_LIST_KEY}', ${index}, window.renderCheckerList)" title="削除">${deleteIcon}</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    // ドロップダウンも更新
+    updateDropdownOptions(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], DEFAULT_CHECKERS);
+}
 function renderVehicleList() {
     const container = document.getElementById('vehicle-list-container');
     if (!container) return;
@@ -216,6 +248,14 @@ function updateDropdownOptions(storageKey, elementIds, defaultList) {
 
     if (items.length === 0) items = defaultList;
 
+    // 確認者リストの場合、お気に入りを上に並べる
+    if (storageKey === CHECKER_LIST_KEY) {
+        const favs = getFavCheckers();
+        const favItems = items.filter(i => favs.includes(i));
+        const normalItems = items.filter(i => !favs.includes(i));
+        items = [...favItems, ...normalItems];
+    }
+
     elementIds.forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
@@ -228,12 +268,40 @@ function updateDropdownOptions(storageKey, elementIds, defaultList) {
         emptyOpt.textContent = '-- 選択してください --';
         select.appendChild(emptyOpt);
 
-        items.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item;
-            opt.textContent = item;
-            select.appendChild(opt);
-        });
+        // 確認者の場合、お気に入りとそれ以外を区切る
+        if (storageKey === CHECKER_LIST_KEY) {
+            const favs = getFavCheckers();
+            const favItems = items.filter(i => favs.includes(i));
+            const normalItems = items.filter(i => !favs.includes(i));
+
+            favItems.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = '★ ' + item;
+                select.appendChild(opt);
+            });
+
+            if (favItems.length > 0 && normalItems.length > 0) {
+                const sep = document.createElement('option');
+                sep.disabled = true;
+                sep.textContent = '──────────';
+                select.appendChild(sep);
+            }
+
+            normalItems.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                select.appendChild(opt);
+            });
+        } else {
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                select.appendChild(opt);
+            });
+        }
 
         if (Array.from(select.options).some(o => o.value === currentVal)) {
             select.value = currentVal;
@@ -549,4 +617,40 @@ function applyDefaults() {
             startMeter1.value = lastMeter;
         }
     }
+}
+
+/**
+ * お気に入り確認者リストの取得
+ */
+function getFavCheckers() {
+    try {
+        const json = localStorage.getItem(FAV_CHECKER_KEY);
+        return json ? JSON.parse(json) : [];
+    } catch (e) { return []; }
+}
+
+/**
+ * お気に入り確認者のトグル
+ */
+function toggleFavChecker(name) {
+    const favs = getFavCheckers();
+    const idx = favs.indexOf(name);
+    if (idx >= 0) {
+        favs.splice(idx, 1);
+    } else {
+        favs.push(name);
+    }
+    localStorage.setItem(FAV_CHECKER_KEY, JSON.stringify(favs));
+    renderCheckerList();
+}
+
+/**
+ * QRスキャン専用ショートカット作成用の遷移
+ */
+function createQrShortcut() {
+    // #qr-scan を付けてページをリロード（またはハッシュ変更）
+    // これにより、ユーザーはこの状態で「ホーム画面に追加」できる
+    const url = new URL(window.location.href);
+    url.hash = '#qr-scan';
+    window.location.href = url.href;
 }

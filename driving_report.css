@@ -684,6 +684,35 @@ select {
     border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
+.btn-fav-small {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    font-size: 1rem;
+    opacity: 0.4;
+}
+
+.btn-fav-small:hover {
+    opacity: 0.8;
+    color: #fbbf24;
+}
+
+.btn-fav-small.fav-active {
+    opacity: 1;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
 /* 車両インライン編集フォーム */
 .list-item-editing {
     display: flex !important;

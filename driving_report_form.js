@@ -118,7 +118,7 @@ function resetFormExceptHeader() {
     setVal('pre-check-method', '対面');
     setVal('pre-checker', '');
     setVal('pre-alcohol-val', '');
-    document.querySelectorAll('input[name="pre-alcohol"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name="pre-alcohol"]').forEach(r => r.checked = (r.value === '無'));
     document.getElementById('pre-alcohol-val').style.display = 'none';
 
     for (let i = 1; i <= 3; i++) {
@@ -126,7 +126,7 @@ function resetFormExceptHeader() {
         setVal(`destination-${i}`, '');
         setVal(`start-time-${i}`, '');
         setVal(`start-meter-${i}`, '');
-        document.querySelectorAll(`input[name="pre-inspection-${i}"]`).forEach(r => r.checked = false);
+        document.querySelectorAll(`input[name="pre-inspection-${i}"]`).forEach(r => r.checked = (r.value === '実施'));
         setVal(`end-time-${i}`, '');
         setVal(`end-meter-${i}`, '');
         setVal(`vehicle-return-${i}`, '');
@@ -146,7 +146,7 @@ function resetFormExceptHeader() {
     setVal('post-check-time', '');
     setVal('post-check-method', '対面');
     setVal('post-checker', '');
-    document.querySelectorAll('input[name="post-alcohol"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name="post-alcohol"]').forEach(r => r.checked = (r.value === '無'));
 
     setVal('refuel-amount', '');
     setVal('refuel-meter', '');

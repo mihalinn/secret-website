@@ -17,5 +17,19 @@
             "sizes": "512x512",
             "type": "image/png"
         }
+    ],
+    "shortcuts": [
+        {
+            "name": "QRスキャンを開始",
+            "short_name": "QRスキャン",
+            "description": "車両のQRコードをスキャンします",
+            "url": "./driving_report.html#qr-scan",
+            "icons": [
+                {
+                    "src": "icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
     ]
 }
