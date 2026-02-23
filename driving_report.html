@@ -50,24 +50,22 @@
         <!-- メインコンテンツ -->
         <main class="grid single-column wide-layout">
 
-            <!-- メインタブ (data-main-tab で設定モーダルUIと分離) -->
-            <nav class="main-tabs-nav">
-                <button class="main-tab-btn active" data-main-tab="form">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            <!-- フロート式タブ切替 (画面右上に常駐) -->
+            <div class="floating-view-toggle">
+                <button class="view-toggle-btn active" data-main-tab="form" title="入力フォーム">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                    入力フォーム
                 </button>
-                <button class="main-tab-btn" data-main-tab="cloud">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                <button class="view-toggle-btn" data-main-tab="cloud" title="クラウド同期">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
                     </svg>
-                    クラウド同期
                 </button>
-            </nav>
+            </div>
 
             <!-- 入力フォームタブ -->
             <div id="main-tab-form" class="main-tab-content active">
@@ -534,41 +532,35 @@
 
             <!-- クラウド同期タブ -->
             <div id="main-tab-cloud" class="main-tab-content">
-                <section class="card glass">
+                <section class="card glass compact-card">
                     <div class="cloud-view-header">
-                        <div class="cloud-selectors">
-                            <div class="cloud-select-group">
-                                <label for="cloud-vehicle-select">車両</label>
-                                <select id="cloud-vehicle-select" class="input-text-small"></select>
+                        <!-- メイン行: 車両・年・月 + 更新ボタン -->
+                        <div class="cloud-main-row">
+                            <div class="cloud-selectors">
+                                <select id="cloud-vehicle-select" class="input-text-small" aria-label="車両"></select>
+                                <select id="cloud-year-select" class="input-text-small" aria-label="年"></select>
+                                <select id="cloud-month-select" class="input-text-small" aria-label="月"></select>
                             </div>
-                            <div class="cloud-select-group">
-                                <label for="cloud-year-select">年</label>
-                                <select id="cloud-year-select" class="input-text-small"></select>
-                            </div>
-                            <div class="cloud-select-group">
-                                <label for="cloud-month-select">月</label>
-                                <select id="cloud-month-select" class="input-text-small"></select>
-                            </div>
+                            <button id="btn-refresh-cloud" class="btn-primary cloud-refresh-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                    </path>
+                                </svg>
+                                更新
+                            </button>
                         </div>
-                        <div class="cloud-status-area">
+                        <!-- サブ行: ズーム + ステータス（目立たせない） -->
+                        <div class="cloud-sub-row">
                             <div class="cloud-zoom-control">
-                                <label for="cloud-zoom-range">拡大縮小: <span id="cloud-zoom-val">100%</span></label>
-                                <input type="range" id="cloud-zoom-range" min="50" max="150" value="100" step="5">
+                                <label for="cloud-zoom-range">拡大縮小: <span id="cloud-zoom-val">75%</span></label>
+                                <input type="range" id="cloud-zoom-range" min="50" max="150" value="75" step="5">
                             </div>
-                            <div class="cloud-status-badge">
-                                <span id="cloud-status-label">未選択</span>
-                            </div>
+                            <span id="cloud-status-label" class="cloud-status-badge">条件を選択してください</span>
                             <span id="cloud-last-update" class="cloud-update-time">&nbsp;</span>
                         </div>
-                        <button id="btn-refresh-cloud" class="btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <polyline points="1 20 1 14 7 14"></polyline>
-                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                            </svg>
-                            <span>更新</span>
-                        </button>
                     </div>
                     <div id="cloud-empty-msg" class="cloud-empty">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"

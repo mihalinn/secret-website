@@ -314,8 +314,8 @@ function setupEventListeners() {
         }, { passive: true });
     }
 
-    // メインタブ切り替えボタン（設定モーダルの .tab-btn とは別の .main-tab-btn を使用）
-    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+    // メインタブ切り替えボタン（フロート式 .view-toggle-btn を使用）
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             switchMainTab(btn.getAttribute('data-main-tab'));
         });
@@ -348,7 +348,7 @@ function applyCloudZoom(percent) {
  * 設定モーダル用の switchTab() とは別関数
  */
 function switchMainTab(tabId) {
-    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-main-tab') === tabId);
     });
     document.querySelectorAll('.main-tab-content').forEach(content => {
