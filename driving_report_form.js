@@ -174,6 +174,40 @@ function toggleRowIfHasData(rowNum, data) {
  * フォームデータの収集
  */
 function collectReportData() {
+    /**
+     * 記録2・3が閉じている or 実質未使用（時刻・到着メーター未入力）なら空データ
+     */
+    function isRecordUsed(rowNum) {
+        if (rowNum === 1) return true;
+        const body = document.getElementById(`row-${rowNum}-body`);
+        if (!body || body.style.display === 'none') return false;
+        // 開いていても時刻も到着メーターもなければ未使用
+        const endTime = document.getElementById(`end-time-${rowNum}`)?.value;
+        const endMeter = document.getElementById(`end-meter-${rowNum}`)?.value;
+        return !!(endTime || endMeter);
+    }
+
+    function getRowData(n) {
+        if (!isRecordUsed(n)) {
+            return { driver: '', destination: '', startTime: '', startMeter: '', preInspection: '', endTime: '', endMeter: '', distance: '0', vehicleReturn: '' };
+        }
+        return {
+            driver: document.getElementById(`driver-name-${n}`).value,
+            destination: document.getElementById(`destination-${n}`).value,
+            startTime: document.getElementById(`start-time-${n}`).value,
+            startMeter: document.getElementById(`start-meter-${n}`).value,
+            preInspection: document.querySelector(`input[name="pre-inspection-${n}"]:checked`)?.value || '',
+            endTime: document.getElementById(`end-time-${n}`).value,
+            endMeter: document.getElementById(`end-meter-${n}`).value,
+            distance: document.getElementById(`calc-distance-${n}`).textContent,
+            vehicleReturn: document.getElementById(`vehicle-return-${n}`).value,
+        };
+    }
+
+    const r1 = getRowData(1);
+    const r2 = getRowData(2);
+    const r3 = getRowData(3);
+
     return {
         date: document.getElementById('report-date').value,
         vehicleId: document.getElementById('vehicle-id').value,
@@ -183,35 +217,23 @@ function collectReportData() {
         preAlcohol: document.querySelector('input[name="pre-alcohol"]:checked')?.value || '',
         preAlcoholVal: document.getElementById('pre-alcohol-val').value,
 
-        driver1: document.getElementById('driver-name-1').value,
-        destination1: document.getElementById('destination-1').value,
-        startTime1: document.getElementById('start-time-1').value,
-        startMeter1: document.getElementById('start-meter-1').value,
-        preInspection1: document.querySelector('input[name="pre-inspection-1"]:checked')?.value || '',
-        endTime1: document.getElementById('end-time-1').value,
-        endMeter1: document.getElementById('end-meter-1').value,
-        distance1: document.getElementById('calc-distance-1').textContent,
-        vehicleReturn1: document.getElementById('vehicle-return-1').value,
+        driver1: r1.driver, destination1: r1.destination,
+        startTime1: r1.startTime, startMeter1: r1.startMeter,
+        preInspection1: r1.preInspection, endTime1: r1.endTime,
+        endMeter1: r1.endMeter, distance1: r1.distance,
+        vehicleReturn1: r1.vehicleReturn,
 
-        driver2: document.getElementById('driver-name-2').value,
-        destination2: document.getElementById('destination-2').value,
-        startTime2: document.getElementById('start-time-2').value,
-        startMeter2: document.getElementById('start-meter-2').value,
-        preInspection2: document.querySelector('input[name="pre-inspection-2"]:checked')?.value || '',
-        endTime2: document.getElementById('end-time-2').value,
-        endMeter2: document.getElementById('end-meter-2').value,
-        distance2: document.getElementById('calc-distance-2').textContent,
-        vehicleReturn2: document.getElementById('vehicle-return-2').value,
+        driver2: r2.driver, destination2: r2.destination,
+        startTime2: r2.startTime, startMeter2: r2.startMeter,
+        preInspection2: r2.preInspection, endTime2: r2.endTime,
+        endMeter2: r2.endMeter, distance2: r2.distance,
+        vehicleReturn2: r2.vehicleReturn,
 
-        driver3: document.getElementById('driver-name-3').value,
-        destination3: document.getElementById('destination-3').value,
-        startTime3: document.getElementById('start-time-3').value,
-        startMeter3: document.getElementById('start-meter-3').value,
-        preInspection3: document.querySelector('input[name="pre-inspection-3"]:checked')?.value || '',
-        endTime3: document.getElementById('end-time-3').value,
-        endMeter3: document.getElementById('end-meter-3').value,
-        distance3: document.getElementById('calc-distance-3').textContent,
-        vehicleReturn3: document.getElementById('vehicle-return-3').value,
+        driver3: r3.driver, destination3: r3.destination,
+        startTime3: r3.startTime, startMeter3: r3.startMeter,
+        preInspection3: r3.preInspection, endTime3: r3.endTime,
+        endMeter3: r3.endMeter, distance3: r3.distance,
+        vehicleReturn3: r3.vehicleReturn,
 
         totalDistance: document.getElementById('calc-distance-total').textContent,
         isOver400km: parseFloat(document.getElementById('calc-distance-total').textContent || '0') > 400,
@@ -232,3 +254,156 @@ window.fillForm = fillForm;
 window.resetForm = resetForm;
 window.resetFormExceptHeader = resetFormExceptHeader;
 window.collectReportData = collectReportData;
+
+/**
+ * フォームバリデーション（送信時に警告表示。ブロックはしない）
+ * @returns {boolean} 問題がなければ true
+ */
+function validateForm() {
+    // 前回のエラー表示をクリア
+    document.querySelectorAll('.validation-error').forEach(el => el.classList.remove('validation-error'));
+    document.querySelectorAll('.validation-warning').forEach(el => el.remove());
+
+    const errors = [];
+
+    // 必須チェック対象
+    const requiredFields = [
+        { id: 'vehicle-id', label: '車両' },
+        { id: 'driver-name-1', label: '記録1 運転者' },
+        { id: 'destination-1', label: '記録1 訪問先' },
+        { id: 'start-time-1', label: '記録1 出発時刻' },
+        { id: 'end-time-1', label: '記録1 到着時刻' },
+        { id: 'start-meter-1', label: '記録1 出発メーター' },
+        { id: 'end-meter-1', label: '記録1 到着メーター' },
+        { id: 'pre-check-time', label: '乗車前 確認時刻' },
+        { id: 'pre-checker', label: '乗車前 確認者' },
+        { id: 'post-check-time', label: '乗車後 確認時刻' },
+        { id: 'post-checker', label: '乗車後 確認者' },
+    ];
+
+    // 記録2・3が開いている場合は追加
+    for (let i = 2; i <= 3; i++) {
+        const body = document.getElementById(`row-${i}-body`);
+        if (body && body.style.display !== 'none') {
+            requiredFields.push(
+                { id: `driver-name-${i}`, label: `記録${i} 運転者` },
+                { id: `start-time-${i}`, label: `記録${i} 出発時刻` },
+                { id: `end-time-${i}`, label: `記録${i} 到着時刻` },
+                { id: `start-meter-${i}`, label: `記録${i} 出発メーター` },
+                { id: `end-meter-${i}`, label: `記録${i} 到着メーター` },
+            );
+        }
+    }
+
+    // 未入力チェック
+    requiredFields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && !el.value) {
+            el.classList.add('validation-error');
+            errors.push(f.label);
+        }
+    });
+
+    // 時間・メーター矛盾チェック
+    const timeWarnings = checkTimeConflicts();
+
+    // 最初のエラー要素にスクロール
+    const firstError = document.querySelector('.validation-error');
+    if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return errors.length === 0 && timeWarnings.length === 0;
+}
+
+/**
+ * 時間・メーター矛盾チェック
+ */
+function checkTimeConflicts() {
+    const warnings = [];
+
+    for (let i = 1; i <= 3; i++) {
+        const body = i === 1 ? true : (document.getElementById(`row-${i}-body`)?.style.display !== 'none');
+        if (!body) continue;
+
+        const startTime = document.getElementById(`start-time-${i}`)?.value;
+        const endTime = document.getElementById(`end-time-${i}`)?.value;
+        const startMeter = parseFloat(document.getElementById(`start-meter-${i}`)?.value);
+        const endMeter = parseFloat(document.getElementById(`end-meter-${i}`)?.value);
+
+        // 到着時刻 < 出発時刻
+        if (startTime && endTime && endTime < startTime) {
+            const el = document.getElementById(`end-time-${i}`);
+            if (el) {
+                el.classList.add('validation-error');
+                showWarningBadge(el, `到着が出発より前です`);
+            }
+            warnings.push(`記録${i}: 到着時刻が出発時刻より前`);
+        }
+
+        // 到着メーター < 出発メーター
+        if (!isNaN(startMeter) && !isNaN(endMeter) && endMeter < startMeter) {
+            const el = document.getElementById(`end-meter-${i}`);
+            if (el) {
+                el.classList.add('validation-error');
+                showWarningBadge(el, `到着メーターが出発より小さいです`);
+            }
+            warnings.push(`記録${i}: メーター逆転`);
+        }
+    }
+
+    // 記録間の時系列チェック
+    for (let i = 1; i <= 2; i++) {
+        const nextBody = document.getElementById(`row-${i + 1}-body`);
+        if (!nextBody || nextBody.style.display === 'none') continue;
+
+        const prevEnd = document.getElementById(`end-time-${i}`)?.value;
+        const nextStart = document.getElementById(`start-time-${i + 1}`)?.value;
+        if (prevEnd && nextStart && nextStart < prevEnd) {
+            const el = document.getElementById(`start-time-${i + 1}`);
+            if (el) {
+                el.classList.add('validation-error');
+                showWarningBadge(el, `記録${i}の到着より前です`);
+            }
+            warnings.push(`記録${i + 1}の出発が記録${i}の到着より前`);
+        }
+    }
+
+    return warnings;
+}
+
+/**
+ * 警告バッジを要素の近くに表示
+ */
+function showWarningBadge(el, message) {
+    const badge = document.createElement('div');
+    badge.className = 'validation-warning';
+    badge.textContent = '⚠️ ' + message;
+    el.closest('.form-group')?.appendChild(badge);
+}
+
+/**
+ * 記録2展開時にメーター自動コピー
+ */
+function copyMeterToRecord(fromRow, toRow) {
+    const endMeter = document.getElementById(`end-meter-${fromRow}`);
+    const startMeter = document.getElementById(`start-meter-${toRow}`);
+    if (endMeter && startMeter && endMeter.value && !startMeter.value) {
+        startMeter.value = endMeter.value;
+    }
+}
+
+/**
+ * メーターをlocalStorageにバックアップ
+ */
+function backupMeter(meterId) {
+    const el = document.getElementById(meterId);
+    if (el && el.value) {
+        localStorage.setItem(LAST_METER_KEY, el.value);
+    }
+}
+
+window.validateForm = validateForm;
+window.checkTimeConflicts = checkTimeConflicts;
+window.copyMeterToRecord = copyMeterToRecord;
+window.backupMeter = backupMeter;

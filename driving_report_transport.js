@@ -44,6 +44,11 @@ async function sendReport() {
 
     const data = collectReportData();
 
+    // バリデーション（警告のみ、送信はブロックしない）
+    if (typeof validateForm === 'function') {
+        validateForm();
+    }
+
     if (!data.date || !data.vehicleId || !data.driver1) {
         statusMsg.textContent = '日付、車両、記録1の運転者名は必須です';
         statusMsg.className = 'status-msg status-error';

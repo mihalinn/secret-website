@@ -690,6 +690,24 @@
 
                 <!-- 詳細・引継ぎ設定 -->
                 <div id="tab-system" class="tab-content">
+                    <!-- デフォルト設定 -->
+                    <div class="setting-group">
+                        <div class="setting-group-title">デフォルト設定</div>
+                        <p class="modal-desc">フォーム起動時に自動でセットされる車両と運転者を選択できます</p>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+                            <div style="flex:1; min-width:140px;">
+                                <label
+                                    style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px; display:block;">デフォルト車両</label>
+                                <select id="default-vehicle-select" class="input-text" style="width:100%;"></select>
+                            </div>
+                            <div style="flex:1; min-width:140px;">
+                                <label
+                                    style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px; display:block;">デフォルト運転者</label>
+                                <select id="default-driver-select" class="input-text" style="width:100%;"></select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- マスターデータ一括登録 -->
                     <div class="setting-group">
                         <div class="setting-group-title">マスターデータの一括登録</div>

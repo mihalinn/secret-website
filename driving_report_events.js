@@ -125,15 +125,44 @@ function setupEventListeners() {
                 btn.innerHTML = isHidden
                     ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="18 15 12 9 6 15"></polyline></svg> 閉じる'
                     : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="6 9 12 15 18 9"></polyline></svg> 開く';
+
+                // 記録2・3を開いた時にメーターを自動コピー（空欄時のみ）
+                if (isHidden && typeof copyMeterToRecord === 'function') {
+                    if (targetId === 'row-2-body') copyMeterToRecord(1, 2);
+                    if (targetId === 'row-3-body') copyMeterToRecord(2, 3);
+                }
             }
         });
     });
 
-    // メーター入力時の距離計算
+    // メーター入力時の距離計算 + バックアップ
     for (let i = 1; i <= 3; i++) {
         document.getElementById(`start-meter-${i}`).addEventListener('input', calcDistance);
-        document.getElementById(`end-meter-${i}`).addEventListener('input', calcDistance);
+        document.getElementById(`end-meter-${i}`).addEventListener('input', (e) => {
+            calcDistance();
+            // 到着メーター入力時にlocalStorageにバックアップ
+            if (typeof backupMeter === 'function') backupMeter(e.target.id);
+        });
     }
+
+    // リアルタイムバリデーション: 時刻・メーター入力時に即チェック
+    const realtimeValidationIds = [];
+    for (let i = 1; i <= 3; i++) {
+        realtimeValidationIds.push(`start-time-${i}`, `end-time-${i}`, `start-meter-${i}`, `end-meter-${i}`);
+    }
+    realtimeValidationIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                // そのフィールドのエラー表示をクリア
+                el.classList.remove('validation-error');
+                const oldWarning = el.closest('.form-group')?.querySelector('.validation-warning');
+                if (oldWarning) oldWarning.remove();
+                // 矛盾チェックを再実行
+                if (typeof checkTimeConflicts === 'function') checkTimeConflicts();
+            });
+        }
+    });
 
     // アルコールチェック表示切り替え
     document.querySelectorAll('input[name="pre-alcohol"]').forEach(radio => {

@@ -24,6 +24,7 @@ function initDropdowns() {
     updateDropdownOptions(DRIVER_LIST_KEY, ['driver-name-1', 'driver-name-2', 'driver-name-3'], DEFAULT_DRIVERS);
     updateVehicleDropdowns(); // 車両はニックネーム対応の専用関数
     updateDropdownOptions(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], DEFAULT_CHECKERS);
+    initDefaultSelects(); // デフォルト設定セレクトの初期化
 }
 
 /**
@@ -461,4 +462,91 @@ function saveVehicleEdit(index) {
     };
     localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(items));
     renderVehicleList();
+}
+
+/**
+ * デフォルト設定セレクトの初期化
+ */
+function initDefaultSelects() {
+    // デフォルト車両セレクト
+    const defaultVehicle = document.getElementById('default-vehicle-select');
+    if (defaultVehicle) {
+        const vehicles = getVehicleList();
+        const savedVal = localStorage.getItem(DEFAULT_VEHICLE_KEY) || '';
+        defaultVehicle.innerHTML = '<option value="">なし（手動選択）</option>';
+        vehicles.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.plate || v.nickname;
+            opt.textContent = v.nickname ? `${v.nickname}（${v.plate}）` : v.plate;
+            defaultVehicle.appendChild(opt);
+        });
+        defaultVehicle.value = savedVal;
+
+        defaultVehicle.addEventListener('change', () => {
+            localStorage.setItem(DEFAULT_VEHICLE_KEY, defaultVehicle.value);
+        });
+    }
+
+    // デフォルト運転者セレクト
+    const defaultDriver = document.getElementById('default-driver-select');
+    if (defaultDriver) {
+        let drivers = [];
+        try {
+            const json = localStorage.getItem(DRIVER_LIST_KEY);
+            if (json) drivers = JSON.parse(json);
+        } catch (e) { }
+        if (drivers.length === 0) drivers = DEFAULT_DRIVERS;
+
+        const savedVal = localStorage.getItem(DEFAULT_DRIVER_KEY) || '';
+        defaultDriver.innerHTML = '<option value="">なし（手動選択）</option>';
+        drivers.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            defaultDriver.appendChild(opt);
+        });
+        defaultDriver.value = savedVal;
+
+        defaultDriver.addEventListener('change', () => {
+            localStorage.setItem(DEFAULT_DRIVER_KEY, defaultDriver.value);
+        });
+    }
+}
+
+/**
+ * デフォルト値の適用（フォーム起動時）
+ */
+function applyDefaults() {
+    // デフォルト車両（フォーム + クラウド同期の両方に適用）
+    const defaultVehicle = localStorage.getItem(DEFAULT_VEHICLE_KEY);
+    if (defaultVehicle) {
+        ['vehicle-id', 'cloud-vehicle-select'].forEach(selectId => {
+            const sel = document.getElementById(selectId);
+            if (sel && !sel.value) {
+                if (Array.from(sel.options).some(o => o.value === defaultVehicle)) {
+                    sel.value = defaultVehicle;
+                }
+            }
+        });
+    }
+
+    // デフォルト運転者（記録1のみ）
+    const defaultDriver = localStorage.getItem(DEFAULT_DRIVER_KEY);
+    if (defaultDriver) {
+        const driverSelect = document.getElementById('driver-name-1');
+        if (driverSelect && !driverSelect.value) {
+            if (Array.from(driverSelect.options).some(o => o.value === defaultDriver)) {
+                driverSelect.value = defaultDriver;
+            }
+        }
+    }
+
+    // メーターのローカルバックアップ復元（GASデータがない場合のフォールバック）
+    const lastMeter = localStorage.getItem(LAST_METER_KEY);
+    if (lastMeter) {
+        const startMeter1 = document.getElementById('start-meter-1');
+        if (startMeter1 && !startMeter1.value) {
+            startMeter1.value = lastMeter;
+        }
+    }
 }

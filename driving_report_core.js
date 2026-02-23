@@ -14,6 +14,9 @@ const LAST_CHECKER_PRE_KEY = 'driving_report_last_checker_pre';
 const LAST_CHECKER_POST_KEY = 'driving_report_last_checker_post';
 const HISTORY_KEY = 'driving_report_history';
 const PASSCODE_KEY = 'driving_report_passcode';
+const DEFAULT_VEHICLE_KEY = 'driving_report_default_vehicle';
+const DEFAULT_DRIVER_KEY = 'driving_report_default_driver';
+const LAST_METER_KEY = 'driving_report_last_meter';
 
 let html5QrCode = null;
 
@@ -28,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initDate === 'function') initDate();
     if (typeof loadSettings === 'function') loadSettings();
     if (typeof initDropdowns === 'function') initDropdowns();
+    if (typeof applyDefaults === 'function') applyDefaults();
     if (typeof initCloudSelectors === 'function') initCloudSelectors();
     if (typeof setupEventListeners === 'function') setupEventListeners();
 
