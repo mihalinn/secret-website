@@ -660,6 +660,7 @@ select {
     align-self: center;
 }
 
+.btn-edit-small,
 .btn-qr-small,
 .btn-delete {
     width: 38px;
@@ -677,6 +678,94 @@ select {
     background: rgba(56, 189, 248, 0.1);
     color: var(--accent);
     border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.btn-edit-small {
+    background: rgba(168, 85, 247, 0.1);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+/* 車両インライン編集フォーム */
+.list-item-editing {
+    display: flex !important;
+    grid-template-columns: unset !important;
+    flex-direction: column !important;
+    padding: 12px !important;
+    background: rgba(99, 102, 241, 0.05) !important;
+    border: 1px solid rgba(99, 102, 241, 0.2) !important;
+    border-radius: 10px !important;
+    gap: 10px !important;
+    overflow: unset !important;
+    min-height: unset !important;
+    height: auto !important;
+}
+
+.vehicle-edit-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vehicle-edit-fields {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.vehicle-edit-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vehicle-edit-field:first-child {
+    flex: 0.8;
+}
+
+.vehicle-edit-field label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.vehicle-edit-field .input-add-item {
+    width: 100%;
+    padding: 8px 10px !important;
+    font-size: 0.85rem !important;
+    border-radius: 6px !important;
+}
+
+.vehicle-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.vehicle-edit-save {
+    padding: 6px 18px !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+}
+
+.vehicle-edit-cancel {
+    padding: 6px 14px !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+}
+
+.vehicle-edit-cancel:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
 }
 
 .btn-delete {

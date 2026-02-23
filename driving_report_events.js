@@ -62,7 +62,7 @@ function setupEventListeners() {
     document.getElementById('btn-add-driver').addEventListener('click', () => addItem(DRIVER_LIST_KEY, 'input-add-driver', renderDriverList));
     document.getElementById('btn-add-checker').addEventListener('click', () => addItem(CHECKER_LIST_KEY, 'input-add-checker', renderCheckerList));
     const btnAddVehicle = document.getElementById('btn-add-vehicle');
-    if (btnAddVehicle) btnAddVehicle.addEventListener('click', () => addItem(VEHICLE_LIST_KEY, 'input-add-vehicle', renderVehicleList));
+    if (btnAddVehicle) btnAddVehicle.addEventListener('click', () => addVehicleWithNickname());
 
     // 設定値の自動保存
     document.getElementById('gas-url-input').addEventListener('input', (e) => {

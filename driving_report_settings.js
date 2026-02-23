@@ -22,7 +22,7 @@ function loadSettings() {
  */
 function initDropdowns() {
     updateDropdownOptions(DRIVER_LIST_KEY, ['driver-name-1', 'driver-name-2', 'driver-name-3'], DEFAULT_DRIVERS);
-    updateDropdownOptions(VEHICLE_LIST_KEY, ['vehicle-id', 'cloud-vehicle-select'], DEFAULT_VEHICLES);
+    updateVehicleDropdowns(); // 車両はニックネーム対応の専用関数
     updateDropdownOptions(CHECKER_LIST_KEY, ['pre-checker', 'post-checker'], DEFAULT_CHECKERS);
 }
 
@@ -100,7 +100,31 @@ window.switchTab = switchTab;
  */
 function renderDriverList() { renderListGeneric(DRIVER_LIST_KEY, 'driver-list-container', renderDriverList); }
 function renderCheckerList() { renderListGeneric(CHECKER_LIST_KEY, 'checker-list-container', renderCheckerList); }
-function renderVehicleList() { renderListGeneric(VEHICLE_LIST_KEY, 'vehicle-list-container', renderVehicleList); }
+function renderVehicleList() {
+    const container = document.getElementById('vehicle-list-container');
+    if (!container) return;
+
+    const items = getVehicleList();
+    container.innerHTML = '';
+
+    items.forEach((v, index) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+
+        const deleteIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+        const qrIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
+        const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+
+        const displayName = v.nickname ? `<strong>${v.nickname}</strong> <span style="opacity:0.6;font-size:0.8em">${v.plate}</span>` : `<span>${v.plate}</span>`;
+        const qrTarget = v.plate || v.nickname;
+        const actionsHtml = `<button class="btn-edit-small" onclick="editVehicle(${index})" title="編集">${editIcon}</button><button class="btn-qr-small" onclick="showQRModal('${qrTarget}')" title="QR">${qrIcon}</button><button class="btn-delete" onclick="deleteItem('${VEHICLE_LIST_KEY}', ${index}, window.renderVehicleList)" title="削除">${deleteIcon}</button>`;
+
+        div.innerHTML = `<span>${displayName}</span><div class="item-actions">${actionsHtml}</div>`;
+        container.appendChild(div);
+    });
+
+    updateVehicleDropdowns();
+}
 
 function renderListGeneric(storageKey, containerId, onDelete) {
     const container = document.getElementById(containerId);
@@ -304,4 +328,137 @@ function printQRCode() {
         </html>
     `);
     printWindow.document.close();
+}
+
+/**
+ * 車両リストを取得（旧形式の文字列配列にも自動対応）
+ */
+function getVehicleList() {
+    let items = [];
+    try {
+        const json = localStorage.getItem(VEHICLE_LIST_KEY);
+        if (json) items = JSON.parse(json);
+    } catch (e) { return []; }
+
+    // 旧形式（文字列配列）を新形式に自動変換
+    if (items.length > 0 && typeof items[0] === 'string') {
+        items = items.map(s => ({ nickname: '', plate: s }));
+        localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(items));
+    }
+    return items;
+}
+
+/**
+ * ニックネーム付き車両追加
+ */
+function addVehicleWithNickname() {
+    const nicknameInput = document.getElementById('input-add-vehicle-nickname');
+    const plateInput = document.getElementById('input-add-vehicle');
+    const nickname = nicknameInput ? nicknameInput.value.trim() : '';
+    const plate = plateInput ? plateInput.value.trim() : '';
+
+    if (!plate && !nickname) return;
+
+    const items = getVehicleList();
+    items.push({ nickname: nickname, plate: plate || nickname });
+    localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(items));
+
+    if (nicknameInput) nicknameInput.value = '';
+    if (plateInput) plateInput.value = '';
+    renderVehicleList();
+}
+
+/**
+ * 車両用ドロップダウン更新（ニックネーム対応）
+ */
+function updateVehicleDropdowns() {
+    const items = getVehicleList();
+    const elementIds = ['vehicle-id', 'cloud-vehicle-select'];
+
+    elementIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const currentVal = select.value;
+        select.innerHTML = '';
+
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '-- 選択してください --';
+        select.appendChild(emptyOpt);
+
+        items.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.plate || v.nickname;
+            opt.textContent = v.nickname ? `${v.nickname}（${v.plate}）` : v.plate;
+            select.appendChild(opt);
+        });
+
+        if (Array.from(select.options).some(o => o.value === currentVal)) {
+            select.value = currentVal;
+        }
+    });
+}
+
+/**
+ * 車両のニックネーム・ナンバーをインライン編集
+ */
+function editVehicle(index) {
+    const items = getVehicleList();
+    if (index < 0 || index >= items.length) return;
+
+    const container = document.getElementById('vehicle-list-container');
+    if (!container) return;
+    const listItem = container.children[index];
+    if (!listItem) return;
+
+    const v = items[index];
+
+    // インライン編集フォームに置き換え
+    listItem.className = 'list-item list-item-editing';
+    listItem.innerHTML = `
+        <div class="vehicle-edit-form">
+            <div class="vehicle-edit-fields">
+                <div class="vehicle-edit-field">
+                    <label>ニックネーム</label>
+                    <input type="text" class="input-add-item" value="${v.nickname || ''}" placeholder="例: 1号車" id="edit-nickname-${index}">
+                </div>
+                <div class="vehicle-edit-field">
+                    <label>ナンバー</label>
+                    <input type="text" class="input-add-item" value="${v.plate || ''}" placeholder="例: 品川300あ1234" id="edit-plate-${index}">
+                </div>
+            </div>
+            <div class="vehicle-edit-actions">
+                <button class="btn-action-accent vehicle-edit-save" onclick="saveVehicleEdit(${index})">✓ 保存</button>
+                <button class="btn-action-secondary vehicle-edit-cancel" onclick="renderVehicleList()">キャンセル</button>
+            </div>
+        </div>
+    `;
+
+    // ニックネーム欄にフォーカス
+    const nicknameInput = document.getElementById('edit-nickname-' + index);
+    if (nicknameInput) nicknameInput.focus();
+}
+
+/**
+ * インライン編集の保存
+ */
+function saveVehicleEdit(index) {
+    const items = getVehicleList();
+    if (index < 0 || index >= items.length) return;
+
+    const nicknameInput = document.getElementById('edit-nickname-' + index);
+    const plateInput = document.getElementById('edit-plate-' + index);
+
+    const newNickname = nicknameInput ? nicknameInput.value.trim() : '';
+    const newPlate = plateInput ? plateInput.value.trim() : '';
+
+    if (!newNickname && !newPlate) return;
+
+    items[index] = {
+        nickname: newNickname,
+        plate: newPlate || items[index].plate
+    };
+    localStorage.setItem(VEHICLE_LIST_KEY, JSON.stringify(items));
+    renderVehicleList();
 }

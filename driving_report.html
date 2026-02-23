@@ -677,10 +677,13 @@
 
                 <!-- 車両設定 -->
                 <div id="tab-vehicle" class="tab-content">
-                    <p class="modal-desc">使用車両リストの編集</p>
+                    <p class="modal-desc">使用車両リストの編集（ニックネームを付けると選択時に分かりやすくなります）</p>
                     <div id="vehicle-list-container" class="list-edit-container"></div>
-                    <div class="add-item-row">
-                        <input type="text" id="input-add-vehicle" class="input-add-item" placeholder="車両名を追加">
+                    <div class="add-item-row add-vehicle-row">
+                        <input type="text" id="input-add-vehicle-nickname" class="input-add-item"
+                            placeholder="ニックネーム（例: 1号車）" style="flex:1;">
+                        <input type="text" id="input-add-vehicle" class="input-add-item"
+                            placeholder="ナンバー（例: 品川300あ1234）" style="flex:1.5;">
                         <button class="btn-add-item" id="btn-add-vehicle">追加</button>
                     </div>
                 </div>
