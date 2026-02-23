@@ -1,8 +1,8 @@
 {
-    "name": "極秘ツール集",
-    "short_name": "極秘ツール",
+    "name": "勤怠作成",
+    "short_name": "勤怠作成",
     "description": "勤怠管理と運行日報の統合ツールスイート",
-    "start_url": "./index.html",
+    "start_url": "./driving_report.html",
     "display": "standalone",
     "background_color": "#0f172a",
     "theme_color": "#0f172a",
